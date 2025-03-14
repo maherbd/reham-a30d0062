@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FadeIn } from '@/components/transitions/FadeIn';
@@ -71,8 +72,12 @@ export function Footer() {
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
             {/* Brand section */}
             <div className="col-span-1 lg:col-span-2">
-              <Link to="/" className="font-display text-2xl font-bold tracking-tight">
-                Reham.org
+              <Link to="/" className="flex items-center mb-4">
+                <img 
+                  src="/lovable-uploads/4f187b63-43be-493c-97cc-07718df52717.png" 
+                  alt="Reham.org Logo" 
+                  className="h-12 w-auto mr-3" 
+                />
               </Link>
               <p className="mt-4 text-sm text-muted-foreground max-w-xs">
                 Building the future of Web3 with AI-powered tools and templates for everyone.

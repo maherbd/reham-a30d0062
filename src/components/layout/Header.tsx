@@ -65,8 +65,15 @@ export function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Link to="/" className="font-display text-2xl font-bold tracking-tight">
-              Reham.org
+            <Link to="/" className="flex items-center">
+              <img 
+                src="/lovable-uploads/4f187b63-43be-493c-97cc-07718df52717.png" 
+                alt="Reham.org Logo" 
+                className="h-10 w-auto mr-2" 
+              />
+              <span className="font-display text-2xl font-bold tracking-tight md:hidden">
+                Reham
+              </span>
             </Link>
           </div>
 
@@ -93,8 +100,15 @@ export function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="flex flex-col">
                 <div className="flex items-center justify-between mb-8">
-                  <Link to="/" className="font-display text-2xl font-bold tracking-tight">
-                    Reham.org
+                  <Link to="/" className="flex items-center">
+                    <img 
+                      src="/lovable-uploads/4f187b63-43be-493c-97cc-07718df52717.png" 
+                      alt="Reham.org Logo" 
+                      className="h-8 w-auto mr-2" 
+                    />
+                    <span className="font-display text-xl font-bold tracking-tight">
+                      Reham
+                    </span>
                   </Link>
                   <SheetClose className="rounded-full p-1.5 hover:bg-muted">
                     <X size={18} />
