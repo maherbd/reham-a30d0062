@@ -6,13 +6,16 @@ import { Footer } from '@/components/layout/Footer';
 import { templates } from '@/assets/templates';
 import { Button } from '@/components/ui/button';
 import { FadeIn } from '@/components/transitions/FadeIn';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Wallet, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { ConnectWallet } from '@/components/ui/ConnectWallet';
+import { Card, CardContent } from '@/components/ui/card';
 
 const TemplateDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [walletConnected, setWalletConnected] = useState(false);
   
   // Find the template by ID
   const template = templates.find(template => template.id === id);
@@ -41,6 +44,12 @@ const TemplateDetail = () => {
       toast.success("Template selected! Redirecting to dashboard...");
       navigate('/dashboard');
     }, 1000);
+  };
+
+  const handleConnectWallet = () => {
+    // This would connect to a Web3 wallet in a real implementation
+    setWalletConnected(true);
+    toast.success("Wallet connected successfully!");
   };
 
   const features = [
@@ -98,6 +107,30 @@ const TemplateDetail = () => {
                     </ul>
                   </div>
                   
+                  <div className="mt-8">
+                    <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
+                      <CardContent className="p-6">
+                        <h3 className="text-xl font-semibold mb-4">Web3 Integration</h3>
+                        <p className="text-muted-foreground mb-4">
+                          This template includes built-in integration with popular Web3 wallets, allowing users to connect and interact with blockchain applications.
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          <ConnectWallet />
+                          {!walletConnected && (
+                            <Button 
+                              variant="outline"
+                              className="rounded-full flex items-center gap-2"
+                              onClick={handleConnectWallet}
+                            >
+                              <Wallet className="h-4 w-4" />
+                              Connect Custom Wallet
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
                   <div className="mt-10 space-y-4">
                     <Button 
                       onClick={handleUseTemplate} 
@@ -123,6 +156,29 @@ const TemplateDetail = () => {
                       alt={template.title}
                       className="w-full h-auto"
                     />
+                  </div>
+                  
+                  <div className="mt-6 grid grid-cols-2 gap-4">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-between glass-button"
+                      asChild
+                    >
+                      <a href="#" target="_blank" rel="noopener noreferrer">
+                        <span>Live Preview</span>
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-between glass-button"
+                      asChild
+                    >
+                      <a href="#" target="_blank" rel="noopener noreferrer">
+                        <span>Documentation</span>
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
                   </div>
                 </div>
               </div>

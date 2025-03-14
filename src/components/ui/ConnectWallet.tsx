@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Wallet, ArrowRight } from 'lucide-react';
+import { Wallet, ArrowRight, Check, AlertCircle } from 'lucide-react';
+import { connectWallet, isWeb3Available, supportedNetworks, switchNetwork } from '@/utils/Web3Utils';
 
 interface WalletOption {
   id: string;
@@ -13,6 +14,56 @@ interface WalletOption {
 export function ConnectWallet() {
   const [open, setOpen] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [account, setAccount] = useState<string | null>(null);
+  const [walletAvailable, setWalletAvailable] = useState(false);
+  
+  // Check for wallet on component mount
+  useEffect(() => {
+    setWalletAvailable(isWeb3Available());
+    
+    // Check if already connected
+    const checkConnection = async () => {
+      if (isWeb3Available()) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+            setConnected(true);
+          }
+        } catch (error) {
+          console.error("Error checking connection:", error);
+        }
+      }
+    };
+    
+    checkConnection();
+    
+    // Set up listeners for account changes
+    if (isWeb3Available()) {
+      window.ethereum.on('accountsChanged', (accounts: string[]) => {
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+          setConnected(true);
+        } else {
+          setAccount(null);
+          setConnected(false);
+        }
+      });
+      
+      window.ethereum.on('chainChanged', () => {
+        // Handle chain change
+        console.log('Network changed');
+      });
+    }
+    
+    return () => {
+      // Clean up listeners
+      if (isWeb3Available()) {
+        window.ethereum.removeAllListeners('accountsChanged');
+        window.ethereum.removeAllListeners('chainChanged');
+      }
+    };
+  }, []);
   
   const walletOptions: WalletOption[] = [
     {
@@ -60,11 +111,24 @@ export function ConnectWallet() {
     },
   ];
 
-  const handleConnectWallet = (walletId: string) => {
-    // In a real implementation, this would handle wallet connection
+  const handleConnectWallet = async (walletId: string) => {
     console.log(`Connecting to ${walletId}...`);
-    setConnected(true);
-    setOpen(false);
+    
+    if (walletId === 'metamask' && isWeb3Available()) {
+      const connectedAccount = await connectWallet();
+      if (connectedAccount) {
+        setAccount(connectedAccount);
+        setConnected(true);
+        setOpen(false);
+      }
+    } else {
+      // Handle other wallet types
+      console.log(`${walletId} connection not implemented yet`);
+    }
+  };
+  
+  const shortenAddress = (address: string) => {
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
   return (
@@ -77,7 +141,9 @@ export function ConnectWallet() {
           {connected ? (
             <span className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-green-500"></span>
-              <span className="text-sm font-medium">Connected</span>
+              <span className="text-sm font-medium">
+                {account ? shortenAddress(account) : "Connected"}
+              </span>
             </span>
           ) : (
             <span className="flex items-center gap-2">
@@ -91,21 +157,69 @@ export function ConnectWallet() {
         <DialogHeader>
           <DialogTitle>Connect your wallet</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          {walletOptions.map((wallet) => (
-            <button
-              key={wallet.id}
-              className="flex items-center justify-between rounded-lg border p-4 transition-all hover:bg-muted"
-              onClick={() => handleConnectWallet(wallet.id)}
-            >
-              <div className="flex items-center gap-3">
-                {wallet.icon}
-                <span className="font-medium">{wallet.name}</span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </button>
-          ))}
-        </div>
+        
+        {!walletAvailable ? (
+          <div className="p-4 border border-yellow-400/20 rounded-lg bg-yellow-400/10 flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-yellow-400 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-sm">Web3 wallet not detected</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Please install MetaMask or another Web3 wallet extension to continue.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-3"
+                asChild
+              >
+                <a 
+                  href="https://metamask.io/download/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1"
+                >
+                  Install MetaMask
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid gap-4 py-4">
+            {walletOptions.map((wallet) => (
+              <button
+                key={wallet.id}
+                className="flex items-center justify-between rounded-lg border p-4 transition-all hover:bg-muted"
+                onClick={() => handleConnectWallet(wallet.id)}
+              >
+                <div className="flex items-center gap-3">
+                  {wallet.icon}
+                  <span className="font-medium">{wallet.name}</span>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {connected && (
+          <div className="mt-4 border-t pt-4">
+            <h3 className="font-medium text-sm mb-3">Switch Network</h3>
+            <div className="flex flex-wrap gap-2">
+              {Object.keys(supportedNetworks).map((network) => (
+                <Button
+                  key={network}
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full text-xs"
+                  onClick={() => switchNetwork(network as keyof typeof supportedNetworks)}
+                >
+                  {network.charAt(0).toUpperCase() + network.slice(1)}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

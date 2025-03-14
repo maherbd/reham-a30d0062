@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { templates, Template } from '@/assets/templates';
@@ -8,25 +7,42 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { FadeIn, FadeInStagger } from '@/components/transitions/FadeIn';
-import { Eye, Search, ArrowRight, Filter } from 'lucide-react';
+import { Eye, Search, ArrowRight, Filter, Clock, BarChart } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Templates = () => {
-  const [activeFilter, setActiveFilter] = useState<'all' | 'meme' | 'nft' | 'dao' | 'defi'>('all');
+  const [activeFilter, setActiveFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filteredTemplates, setFilteredTemplates] = useState<Template[]>(templates);
+  const [complexityFilter, setComplexityFilter] = useState<string>('all');
+  const [sortOption, setSortOption] = useState<string>('featured');
 
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Filter templates based on category and search query
+  // Filter templates based on category, complexity, and search query
   useEffect(() => {
     let result = templates;
     
     // Apply category filter
     if (activeFilter !== 'all') {
       result = result.filter(template => template.category === activeFilter);
+    }
+    
+    // Apply complexity filter
+    if (complexityFilter !== 'all') {
+      result = result.filter(
+        template => template.complexity === complexityFilter
+      );
     }
     
     // Apply search filter
@@ -39,8 +55,36 @@ const Templates = () => {
       );
     }
     
+    // Apply sorting
+    switch (sortOption) {
+      case 'newest':
+        result = [...result].sort((a, b) => {
+          if (!a.lastUpdated || !b.lastUpdated) return 0;
+          return a.lastUpdated > b.lastUpdated ? -1 : 1;
+        });
+        break;
+      case 'alphabetical':
+        result = [...result].sort((a, b) => 
+          a.title.localeCompare(b.title)
+        );
+        break;
+      case 'complexity':
+        const complexityOrder = { beginner: 1, intermediate: 2, advanced: 3 };
+        result = [...result].sort((a, b) => {
+          if (!a.complexity || !b.complexity) return 0;
+          return complexityOrder[a.complexity] - complexityOrder[b.complexity];
+        });
+        break;
+      case 'featured':
+      default:
+        result = [...result].sort((a, b) => 
+          (b.featured ? 1 : 0) - (a.featured ? 1 : 0)
+        );
+        break;
+    }
+    
     setFilteredTemplates(result);
-  }, [activeFilter, searchQuery]);
+  }, [activeFilter, searchQuery, complexityFilter, sortOption]);
 
   const categories = [
     { id: 'all', label: 'All Templates' },
@@ -48,7 +92,22 @@ const Templates = () => {
     { id: 'nft', label: 'NFT Projects' },
     { id: 'dao', label: 'DAO & Governance' },
     { id: 'defi', label: 'DeFi' },
+    { id: 'gamefi', label: 'GameFi' },
+    { id: 'social', label: 'Social DApps' },
   ];
+
+  const getComplexityColor = (complexity?: string) => {
+    switch (complexity) {
+      case 'beginner':
+        return 'bg-green-500/20 text-green-500';
+      case 'intermediate':
+        return 'bg-amber-500/20 text-amber-500';
+      case 'advanced':
+        return 'bg-red-500/20 text-red-500';
+      default:
+        return 'bg-secondary text-secondary-foreground';
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -66,18 +125,57 @@ const Templates = () => {
             </FadeIn>
 
             <div className="mb-10">
-              <div className="flex flex-col sm:flex-row justify-between gap-4 mb-8">
-                <div className="relative w-full sm:max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input 
-                    type="text" 
-                    placeholder="Search templates..." 
-                    className="pl-10" 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+              <div className="flex flex-col gap-4 mb-8">
+                <div className="flex flex-col sm:flex-row justify-between gap-4">
+                  <div className="relative w-full sm:max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input 
+                      type="text" 
+                      placeholder="Search templates..." 
+                      className="pl-10" 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <BarChart className="h-4 w-4 text-muted-foreground" />
+                      <Select
+                        value={sortOption}
+                        onValueChange={setSortOption}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Sort by" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="featured">Featured</SelectItem>
+                          <SelectItem value="newest">Newest</SelectItem>
+                          <SelectItem value="alphabetical">A-Z</SelectItem>
+                          <SelectItem value="complexity">Complexity</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <Select
+                        value={complexityFilter}
+                        onValueChange={setComplexityFilter}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Complexity" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Levels</SelectItem>
+                          <SelectItem value="beginner">Beginner</SelectItem>
+                          <SelectItem value="intermediate">Intermediate</SelectItem>
+                          <SelectItem value="advanced">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
+                
+                <div className="flex items-center gap-2 overflow-x-auto pb-2">
                   <Filter className="h-4 w-4 text-muted-foreground mr-1" />
                   {categories.map(category => (
                     <Button
@@ -85,7 +183,7 @@ const Templates = () => {
                       variant={activeFilter === category.id ? "default" : "outline"}
                       size="sm"
                       className="rounded-full whitespace-nowrap"
-                      onClick={() => setActiveFilter(category.id as any)}
+                      onClick={() => setActiveFilter(category.id)}
                     >
                       {category.label}
                     </Button>
@@ -127,6 +225,12 @@ const Templates = () => {
                             {tag}
                           </span>
                         ))}
+                        
+                        {template.complexity && (
+                          <Badge variant="outline" className={`ml-auto ${getComplexityColor(template.complexity)}`}>
+                            {template.complexity}
+                          </Badge>
+                        )}
                       </div>
                       <h3 className="text-lg font-semibold leading-8 tracking-tight">
                         {template.title}
@@ -134,6 +238,14 @@ const Templates = () => {
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                         {template.description}
                       </p>
+                      
+                      {template.estimatedSetupTime && (
+                        <div className="mt-3 flex items-center text-xs text-muted-foreground">
+                          <Clock className="h-3.5 w-3.5 mr-1" />
+                          <span>Setup: {template.estimatedSetupTime}</span>
+                        </div>
+                      )}
+                      
                       <div className="mt-4 flex items-center justify-between">
                         <Link
                           to={`/templates/${template.id}`}
