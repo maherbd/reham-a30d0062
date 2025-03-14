@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { FadeIn } from '@/components/transitions/FadeIn';
 import { 
   Twitter, 
   Github, 
-  Discord, 
+  MessageSquare, 
   Send
 } from 'lucide-react';
 
@@ -50,7 +49,7 @@ export function Footer() {
       {
         name: 'Discord',
         href: '#',
-        icon: Discord,
+        icon: MessageSquare,
       },
       {
         name: 'Telegram',
