@@ -1,141 +1,178 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { FadeIn } from '@/components/transitions/FadeIn';
 import { 
-  GithubIcon, 
-  TwitterIcon, 
-  LinkedinIcon, 
-  SendIcon 
+  Twitter, 
+  Github, 
+  Discord, 
+  Send
 } from 'lucide-react';
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
-  
-  const footerSections = [
-    {
-      title: 'Product',
-      links: [
-        { name: 'Templates', href: '/templates' },
-        { name: 'Dashboard', href: '/dashboard' },
-        { name: 'AI Builder', href: '/ai-builder' },
-        { name: 'Token Creator', href: '/token-creator' },
-      ],
-    },
-    {
-      title: 'Resources',
-      links: [
-        { name: 'Documentation', href: '/docs' },
-        { name: 'Guides', href: '/guides' },
-        { name: 'API Reference', href: '/api' },
-        { name: 'Community', href: '/community' },
-      ],
-    },
-    {
-      title: 'Company',
-      links: [
-        { name: 'About', href: '/about' },
-        { name: 'Contact', href: '/contact' },
-        { name: 'Tokenomics', href: '/tokenomics' },
-        { name: 'Referral Program', href: '/referral' },
-      ],
-    },
-  ];
+  const footerNavigation = {
+    product: [
+      { name: 'Features', href: '/#features' },
+      { name: 'Templates', href: '/templates' },
+      { name: 'Dashboard', href: '/dashboard' },
+      { name: 'Tokenomics', href: '/tokenomics' },
+    ],
+    resources: [
+      { name: 'Documentation', href: '/resources' },
+      { name: 'Tutorials', href: '/resources?tab=tutorials' },
+      { name: 'Blog', href: '/resources' },
+      { name: 'Support', href: '/contact' },
+    ],
+    company: [
+      { name: 'About Us', href: '/about' },
+      { name: 'Careers', href: '/careers' },
+      { name: 'Privacy Policy', href: '/privacy' },
+      { name: 'Terms of Service', href: '/terms' },
+    ],
+    legal: [
+      { name: 'Privacy', href: '#' },
+      { name: 'Terms', href: '#' },
+      { name: 'Cookie Policy', href: '#' },
+      { name: 'Licenses', href: '#' },
+    ],
+    social: [
+      {
+        name: 'Twitter',
+        href: '#',
+        icon: Twitter,
+      },
+      {
+        name: 'GitHub',
+        href: '#',
+        icon: Github,
+      },
+      {
+        name: 'Discord',
+        href: '#',
+        icon: Discord,
+      },
+      {
+        name: 'Telegram',
+        href: '#',
+        icon: Send,
+      },
+    ],
+  };
 
-  const socialLinks = [
-    { 
-      name: 'Twitter', 
-      href: 'https://twitter.com', 
-      icon: <TwitterIcon size={18} /> 
-    },
-    { 
-      name: 'GitHub', 
-      href: 'https://github.com', 
-      icon: <GithubIcon size={18} /> 
-    },
-    { 
-      name: 'LinkedIn', 
-      href: 'https://linkedin.com', 
-      icon: <LinkedinIcon size={18} /> 
-    },
-    { 
-      name: 'Telegram', 
-      href: 'https://t.me', 
-      icon: <SendIcon size={18} /> 
-    },
-  ];
+  const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-border/40 bg-gradient-to-b from-transparent to-secondary/20">
-      <FadeIn>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
-            {/* Brand section */}
-            <div className="col-span-1 lg:col-span-2">
-              <Link to="/" className="flex items-center mb-4">
-                <img 
-                  src="/lovable-uploads/4f187b63-43be-493c-97cc-07718df52717.png" 
-                  alt="Reham.org Logo" 
-                  className="h-12 w-auto mr-3" 
+    <FadeIn>
+      <footer className="bg-card" aria-labelledby="footer-heading">
+        <h2 id="footer-heading" className="sr-only">
+          Footer
+        </h2>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+          <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+            <div className="space-y-8 xl:col-span-1">
+              <Link to="/" className="flex items-center">
+                <img
+                  src="/lovable-uploads/4f187b63-43be-493c-97cc-07718df52717.png"
+                  alt="Reham.org Logo"
+                  className="h-10 w-auto mr-2"
                 />
+                <span className="font-display text-2xl font-bold tracking-tight">
+                  Reham
+                </span>
               </Link>
-              <p className="mt-4 text-sm text-muted-foreground max-w-xs">
-                Building the future of Web3 with AI-powered tools and templates for everyone.
+              <p className="text-base text-muted-foreground">
+                Building the future of Web3 with AI-powered tools and premium templates.
               </p>
-              
-              <div className="mt-6 flex items-center space-x-4">
-                {socialLinks.map((item) => (
+              <div className="flex space-x-5">
+                {footerNavigation.social.map((item) => (
                   <a
                     key={item.name}
                     href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-full p-1.5 text-foreground/70 hover:text-foreground hover:bg-secondary transition-colors duration-200"
-                    aria-label={item.name}
+                    className="text-muted-foreground hover:text-foreground"
                   >
-                    {item.icon}
+                    <span className="sr-only">{item.name}</span>
+                    <item.icon className="h-5 w-5" aria-hidden="true" />
                   </a>
                 ))}
               </div>
             </div>
-
-            {/* Links sections */}
-            {footerSections.map((section) => (
-              <div key={section.title} className="col-span-1">
-                <h3 className="text-sm font-semibold text-foreground">{section.title}</h3>
-                <ul className="mt-4 space-y-3">
-                  {section.links.map((link) => (
-                    <li key={link.name}>
-                      <Link
-                        to={link.href}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
-                      >
-                        {link.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+            <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+              <div className="md:grid md:grid-cols-2 md:gap-8">
+                <div>
+                  <h3 className="text-sm font-semibold leading-6">Product</h3>
+                  <ul role="list" className="mt-6 space-y-4">
+                    {footerNavigation.product.map((item) => (
+                      <li key={item.name}>
+                        <Link to={item.href} className="text-sm leading-6 text-muted-foreground hover:text-foreground">
+                          {item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mt-10 md:mt-0">
+                  <h3 className="text-sm font-semibold leading-6">Resources</h3>
+                  <ul role="list" className="mt-6 space-y-4">
+                    {footerNavigation.resources.map((item) => (
+                      <li key={item.name}>
+                        <Link to={item.href} className="text-sm leading-6 text-muted-foreground hover:text-foreground">
+                          {item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-            ))}
-          </div>
-
-          <div className="mt-12 pt-8 border-t border-border">
-            <div className="flex flex-col sm:flex-row justify-between items-center">
-              <p className="text-sm text-muted-foreground">
-                &copy; {currentYear} Reham.org. All rights reserved.
-              </p>
-              <div className="mt-4 sm:mt-0 flex space-x-6">
-                <Link to="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200">
-                  Privacy Policy
-                </Link>
-                <Link to="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200">
-                  Terms of Service
-                </Link>
+              <div className="md:grid md:grid-cols-2 md:gap-8">
+                <div>
+                  <h3 className="text-sm font-semibold leading-6">Company</h3>
+                  <ul role="list" className="mt-6 space-y-4">
+                    {footerNavigation.company.map((item) => (
+                      <li key={item.name}>
+                        <a href={item.href} className="text-sm leading-6 text-muted-foreground hover:text-foreground">
+                          {item.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mt-10 md:mt-0">
+                  <h3 className="text-sm font-semibold leading-6">Legal</h3>
+                  <ul role="list" className="mt-6 space-y-4">
+                    {footerNavigation.legal.map((item) => (
+                      <li key={item.name}>
+                        <a href={item.href} className="text-sm leading-6 text-muted-foreground hover:text-foreground">
+                          {item.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
+          
+          <div className="mt-12 border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center">
+            <p className="text-xs text-muted-foreground">
+              &copy; {currentYear} Reham, Inc. All rights reserved.
+            </p>
+            <div className="mt-4 md:mt-0 flex items-center space-x-4">
+              <Button variant="link" className="text-xs text-muted-foreground p-0 h-auto">
+                Privacy Policy
+              </Button>
+              <span className="text-muted-foreground">•</span>
+              <Button variant="link" className="text-xs text-muted-foreground p-0 h-auto">
+                Terms of Service
+              </Button>
+              <span className="text-muted-foreground">•</span>
+              <Button variant="link" className="text-xs text-muted-foreground p-0 h-auto">
+                Cookie Policy
+              </Button>
+            </div>
+          </div>
         </div>
-      </FadeIn>
-    </footer>
+      </footer>
+    </FadeIn>
   );
 }

@@ -1,0 +1,138 @@
+
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { templates } from '@/assets/templates';
+import { Button } from '@/components/ui/button';
+import { FadeIn } from '@/components/transitions/FadeIn';
+import { ArrowLeft, Check } from 'lucide-react';
+import { toast } from 'sonner';
+
+const TemplateDetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Find the template by ID
+  const template = templates.find(template => template.id === id);
+  
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // If template doesn't exist, redirect to templates page
+  useEffect(() => {
+    if (!template) {
+      navigate('/templates');
+    }
+  }, [template, navigate]);
+
+  if (!template) {
+    return null; // This will be handled by the navigate in useEffect
+  }
+
+  const handleUseTemplate = () => {
+    setIsLoading(true);
+    // Simulate loading
+    setTimeout(() => {
+      setIsLoading(false);
+      toast.success("Template selected! Redirecting to dashboard...");
+      navigate('/dashboard');
+    }, 1000);
+  };
+
+  const features = [
+    "Responsive design for all devices",
+    "Web3 wallet integration",
+    "Dark & light mode support",
+    "SEO optimized",
+    "Fast performance",
+    "Customizable components",
+  ];
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-grow mt-16">
+        <section className="py-16 md:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <FadeIn>
+              <Button 
+                variant="ghost" 
+                className="mb-8 -ml-4 text-muted-foreground hover:text-foreground"
+                onClick={() => navigate('/templates')}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to templates
+              </Button>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="order-2 lg:order-1">
+                  <h1 className="text-3xl md:text-4xl font-bold">{template.title}</h1>
+                  
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {template.tags.map((tag) => (
+                      <span key={tag} className="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-sm font-medium text-secondary-foreground">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  
+                  <p className="mt-6 text-lg text-muted-foreground">
+                    {template.description}
+                  </p>
+                  
+                  <div className="mt-8">
+                    <h3 className="text-xl font-semibold mb-4">Features</h3>
+                    <ul className="space-y-3">
+                      {features.map((feature, index) => (
+                        <li key={index} className="flex items-start">
+                          <div className="mr-3 mt-1">
+                            <Check className="h-5 w-5 text-primary" />
+                          </div>
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <div className="mt-10 space-y-4">
+                    <Button 
+                      onClick={handleUseTemplate} 
+                      className="w-full sm:w-auto primary-button"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Setting up..." : "Use this template"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full sm:w-auto sm:ml-3 glass-button"
+                      asChild
+                    >
+                      <Link to={`/templates`}>Explore other templates</Link>
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="order-1 lg:order-2">
+                  <div className="overflow-hidden rounded-xl border border-border/50 shadow-lg">
+                    <img
+                      src={template.image}
+                      alt={template.title}
+                      className="w-full h-auto"
+                    />
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default TemplateDetail;
