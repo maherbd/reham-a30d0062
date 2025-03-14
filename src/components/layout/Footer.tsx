@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FadeIn } from '@/components/transitions/FadeIn';
@@ -6,7 +5,7 @@ import {
   GithubIcon, 
   TwitterIcon, 
   LinkedinIcon, 
-  TelegramIcon 
+  SendIcon 
 } from 'lucide-react';
 
 export function Footer() {
@@ -61,7 +60,7 @@ export function Footer() {
     { 
       name: 'Telegram', 
       href: 'https://t.me', 
-      icon: <TelegramIcon size={18} /> 
+      icon: <SendIcon size={18} /> 
     },
   ];
 
