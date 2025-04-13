@@ -1,10 +1,9 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { createWebsite } from '@/services/websiteService';
+import { useTemplate as useTemplateSvc } from '@/services/templateService';
 
 export function useTemplateActions() {
   const [isLoading, setIsLoading] = useState(false);
@@ -24,16 +23,15 @@ export function useTemplateActions() {
         return false;
       }
       
-      // Create a new website based on the template
-      const website = await createWebsite(user.id, templateId, 'My New Website');
+      // Use template service to create website based on the template
+      const result = await useTemplateSvc(templateId, user.id);
       
-      if (!website) {
+      if (result) {
+        navigate('/dashboard');
+        return true;
+      } else {
         throw new Error('Failed to create website');
       }
-      
-      toast.success('Template added to your dashboard');
-      navigate('/dashboard');
-      return true;
       
     } catch (error) {
       console.error('Error using template:', error);

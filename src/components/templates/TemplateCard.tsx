@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Template } from '@/types/template';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, ArrowRight } from 'lucide-react';
+import { Eye, ArrowRight, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { TemplatePreview } from './TemplatePreview';
 import { useTemplateActions } from '@/hooks/useTemplateActions';
@@ -67,6 +67,7 @@ export function TemplateCard({ template, showPreview = true }: TemplateCardProps
             ))}
             {template.is_premium && (
               <Badge variant="outline" className="ml-auto bg-amber-500/20 text-amber-500">
+                <Lock className="mr-1 h-3 w-3" />
                 Premium
               </Badge>
             )}

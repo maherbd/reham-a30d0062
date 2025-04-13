@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -137,3 +136,40 @@ export function Header() {
     </header>
   );
 }
+
+export function HeaderWithPricing() {
+  return (
+    <header className="fixed w-full top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-2">
+            <span className="font-bold text-xl">Web3Builder</span>
+          </Link>
+          <nav className="hidden md:flex gap-6">
+            <Link to="/templates" className="text-muted-foreground hover:text-foreground transition-colors">
+              Templates
+            </Link>
+            <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+              Pricing
+            </Link>
+            <Link to="/resources" className="text-muted-foreground hover:text-foreground transition-colors">
+              Resources
+            </Link>
+          </nav>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link to="/login">
+            <Button variant="ghost" size="sm">
+              Sign In
+            </Button>
+          </Link>
+          <Link to="/register">
+            <Button size="sm">Get Started</Button>
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+export { Header } from "@/components/layout/Header";

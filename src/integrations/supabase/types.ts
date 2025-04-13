@@ -96,6 +96,51 @@ export type Database = {
           },
         ]
       }
+      pricing_plans: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string
+          features: Json
+          id: string
+          is_active: boolean
+          is_popular: boolean
+          max_websites: number
+          name: string
+          price_monthly: number
+          price_yearly: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description: string
+          features: Json
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          max_websites?: number
+          name: string
+          price_monthly: number
+          price_yearly: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          max_websites?: number
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           commission_amount: number | null
@@ -186,6 +231,47 @@ export type Database = {
         }
         Relationships: []
       }
+      template_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          last_viewed_at: string | null
+          template_id: string
+          trending_score: number | null
+          updated_at: string
+          uses: number
+          views: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_viewed_at?: string | null
+          template_id: string
+          trending_score?: number | null
+          updated_at?: string
+          uses?: number
+          views?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_viewed_at?: string | null
+          template_id?: string
+          trending_score?: number | null
+          updated_at?: string
+          uses?: number
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_metrics_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       templates: {
         Row: {
           category: string | null
@@ -195,6 +281,7 @@ export type Database = {
           id: string
           is_premium: boolean | null
           name: string
+          popularity: number | null
           thumbnail_url: string | null
           updated_at: string | null
         }
@@ -206,6 +293,7 @@ export type Database = {
           id?: string
           is_premium?: boolean | null
           name: string
+          popularity?: number | null
           thumbnail_url?: string | null
           updated_at?: string | null
         }
@@ -217,10 +305,58 @@ export type Database = {
           id?: string
           is_premium?: boolean | null
           name?: string
+          popularity?: number | null
           thumbnail_url?: string | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          payment_method: string
+          plan_id: string | null
+          status: string
+          transaction_hash: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method?: string
+          plan_id?: string | null
+          status?: string
+          transaction_hash?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method?: string
+          plan_id?: string | null
+          status?: string
+          transaction_hash?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_subscriptions: {
         Row: {
