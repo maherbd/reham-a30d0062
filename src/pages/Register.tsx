@@ -1,199 +1,172 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { FadeIn } from '@/components/transitions/FadeIn';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
-import { Wallet, UserPlus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { FadeIn } from '@/components/transitions/FadeIn';
+import { connectWallet, isWeb3Available } from '@/utils/Web3Utils';
+import { toast } from 'sonner';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
-const formSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string(),
-  acceptTerms: z.boolean().refine(val => val === true, {
-    message: 'You must accept the terms and conditions',
-  }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
-const Register = () => {
-  const { signup } = useAuth();
-  const navigate = useNavigate();
+export default function Register() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Initialize form
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-      confirmPassword: '',
-      acceptTerms: false,
-    },
-  });
+  const { signup, user } = useAuth();
+  const navigate = useNavigate();
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsLoading(true);
-    const success = await signup(values.email, values.password);
-    setIsLoading(false);
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (success) {
-      navigate('/login');
+    if (password !== confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const success = await signup(email, password);
+      if (success) {
+        toast.success('Account created! Please check your email to verify your account.');
+        navigate('/login');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleConnectWallet = async () => {
+    if (!isWeb3Available()) {
+      toast.error('No Web3 wallet detected. Please install MetaMask or another Web3 wallet.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const wallet = await connectWallet();
+      if (wallet) {
+        navigate('/dashboard');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow mt-16">
-        <section className="py-16 md:py-24">
-          <div className="max-w-md mx-auto px-4 sm:px-6">
-            <FadeIn>
-              <Card className="border-border/40 shadow-xl">
-                <CardHeader className="space-y-1 text-center">
-                  <CardTitle className="text-2xl">Create an account</CardTitle>
-                  <CardDescription>
-                    Enter your information below to create an account
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter your email"
-                                type="email"
-                                {...field}
-                                disabled={isLoading}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Create a password"
-                                type="password"
-                                {...field}
-                                disabled={isLoading}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirm Password</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Confirm your password"
-                                type="password"
-                                {...field}
-                                disabled={isLoading}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="acceptTerms"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-2">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                                disabled={isLoading}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>
-                                I accept the <Link to="/terms" className="text-primary hover:underline">terms and conditions</Link>
-                              </FormLabel>
-                              <FormMessage />
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="submit"
-                        className="w-full primary-button"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Creating account..." : "Register with Email"}
-                        <UserPlus className="ml-2 h-4 w-4" />
-                      </Button>
-                    </form>
-                  </Form>
-                  
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-border" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <Button variant="outline" className="w-full glass-button" disabled={isLoading}>
-                    <Wallet className="mr-2 h-4 w-4" />
-                    Connect Wallet
-                  </Button>
-                  
-                  <div className="text-center text-sm">
-                    Already have an account?{" "}
-                    <Link to="/login" className="text-primary hover:underline font-medium">
-                      Sign in
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            </FadeIn>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+      <FadeIn>
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+          <div className="flex flex-col space-y-2 text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
+            <p className="text-sm text-muted-foreground">
+              Enter your details below to create your account
+            </p>
           </div>
-        </section>
-      </main>
-      <Footer />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Sign Up</CardTitle>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col space-y-4">
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Creating account...' : 'Create account'}
+                </Button>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <Separator className="w-full" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                  </div>
+                </div>
+                
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={handleConnectWallet}
+                  disabled={isLoading || !isWeb3Available()}
+                  className="w-full"
+                >
+                  {isLoading ? 'Connecting...' : 'Connect Wallet'}
+                </Button>
+                
+                <p className="px-8 text-center text-sm text-muted-foreground">
+                  Already have an account?{' '}
+                  <Link 
+                    to="/login" 
+                    className="text-primary underline-offset-4 hover:underline"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+              </CardFooter>
+            </form>
+          </Card>
+          <p className="px-8 text-center text-sm text-muted-foreground">
+            By clicking create account, you agree to our{' '}
+            <Link 
+              to="/terms" 
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link 
+              to="/privacy" 
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              Privacy Policy
+            </Link>
+          </p>
+        </div>
+      </FadeIn>
     </div>
   );
-};
-
-export default Register;
+}

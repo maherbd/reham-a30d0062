@@ -1,271 +1,310 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useEffect, useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
+import { FadeIn } from '@/components/transitions/FadeIn';
+import { ConnectWallet } from '@/components/ui/ConnectWallet';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { FadeIn } from '@/components/transitions/FadeIn';
-import { connectWallet } from '@/utils/Web3Utils';
-
-const formSchema = z.object({
-  email: z.string().email().optional(),
-  currentPassword: z.string().min(1, 'Current password is required').optional(),
-  newPassword: z.string().min(6, 'Password must be at least 6 characters').optional(),
-  confirmPassword: z.string().optional(),
-}).refine((data) => !data.newPassword || data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { User, WalletX, CreditCard, Shield, Bell } from 'lucide-react';
 
 const Profile = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [loadingWallet, setLoadingWallet] = useState(false);
-  
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: '',
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    },
-  });
-  
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!values.currentPassword || !values.newPassword) {
-      toast.error('Please provide both current and new password');
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [walletAddress, setWalletAddress] = useState('');
+  const [walletType, setWalletType] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
       return;
     }
-    
-    setLoading(true);
+
+    // Get user email from auth
+    const getUserEmail = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user?.email) {
+        setEmail(data.user.email);
+      }
+    };
+
+    // Get wallet info from custom table
+    const getWalletInfo = async () => {
+      if (user.id) {
+        const { data, error } = await supabase
+          .from('users')
+          .select('wallet_address, wallet_type')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (!error && data) {
+          setWalletAddress(data.wallet_address || '');
+          setWalletType(data.wallet_type || '');
+        }
+      }
+    };
+
+    getUserEmail();
+    getWalletInfo();
+  }, [user, navigate]);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: values.newPassword
-      });
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
       
       if (error) throw error;
       
       toast.success('Password updated successfully');
-      form.reset();
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (error: any) {
-      console.error('Error updating password:', error);
-      toast.error(error.message || 'Error updating password');
+      toast.error(error.message || 'Failed to update password');
     } finally {
-      setLoading(false);
+      setIsUpdatingPassword(false);
     }
   };
-  
-  const handleConnectWallet = async () => {
-    setLoadingWallet(true);
-    try {
-      const walletData = await connectWallet();
-      if (walletData) {
-        toast.success('Wallet connected successfully');
-      }
-    } catch (error) {
-      console.error('Error connecting wallet:', error);
-      toast.error('Failed to connect wallet');
-    } finally {
-      setLoadingWallet(false);
-    }
-  };
-  
+
   const handleLogout = async () => {
+    setIsLoading(true);
     await logout();
     navigate('/');
+    setIsLoading(false);
   };
-  
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
-  
+
+  const shortenAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      
       <main className="flex-grow mt-16">
-        <section className="py-16 md:py-24">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <section className="py-10">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <FadeIn>
               <div className="mb-8">
                 <h1 className="text-3xl font-bold">Profile Settings</h1>
-                <p className="text-muted-foreground mt-2">Manage your account settings and preferences</p>
+                <p className="text-muted-foreground mt-1">
+                  Manage your account preferences and wallet connections
+                </p>
               </div>
               
-              <div className="grid md:grid-cols-3 gap-8">
-                <Card className="md:col-span-2 border-border/40">
-                  <CardHeader>
-                    <CardTitle>Account Information</CardTitle>
-                    <CardDescription>Update your account settings</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Your email address"
-                                  disabled
-                                  value={user.email || 'No email provided'}
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <Separator className="my-6" />
-                        
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-medium">Change Password</h3>
-                          
-                          <FormField
-                            control={form.control}
-                            name="currentPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Current Password</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Enter current password"
-                                    type="password"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="newPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>New Password</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Enter new password"
-                                    type="password"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={form.control}
-                            name="confirmPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Confirm New Password</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Confirm new password"
-                                    type="password"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <Button
-                          type="submit"
-                          disabled={loading}
-                        >
-                          {loading ? 'Updating...' : 'Update Password'}
-                        </Button>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
-                
-                <div className="space-y-6">
-                  <Card className="border-border/40">
-                    <CardHeader>
-                      <CardTitle>Wallet</CardTitle>
-                      <CardDescription>Connect your Web3 wallet</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {user.wallet_address ? (
-                        <div className="space-y-2">
-                          <p className="text-sm font-medium">Connected Wallet:</p>
-                          <p className="text-sm text-muted-foreground break-all bg-secondary/50 p-2 rounded-md">
-                            {user.wallet_address}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {user.blockchain} • {user.wallet_type}
-                          </p>
-                        </div>
-                      ) : (
-                        <Button
-                          className="w-full"
-                          onClick={handleConnectWallet}
-                          disabled={loadingWallet}
-                        >
-                          {loadingWallet ? 'Connecting...' : 'Connect Wallet'}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
+              <div className="grid gap-8">
+                <Tabs defaultValue="account" className="space-y-6">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="account" className="flex items-center gap-1">
+                      <User className="h-4 w-4" />
+                      <span>Account</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="wallet" className="flex items-center gap-1">
+                      <WalletX className="h-4 w-4" />
+                      <span>Wallet</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="billing" className="flex items-center gap-1">
+                      <CreditCard className="h-4 w-4" />
+                      <span>Billing</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="notifications" className="flex items-center gap-1">
+                      <Bell className="h-4 w-4" />
+                      <span>Notifications</span>
+                    </TabsTrigger>
+                  </TabsList>
                   
-                  <Card className="border-border/40">
-                    <CardHeader>
-                      <CardTitle>Danger Zone</CardTitle>
-                      <CardDescription>Critical account actions</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={handleLogout}
-                      >
-                        Log Out
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full text-destructive border-destructive hover:bg-destructive/10"
-                      >
-                        Delete Account
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
+                  <TabsContent value="account">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Account Information</CardTitle>
+                        <CardDescription>
+                          Update your basic account information
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              readOnly
+                              value={email}
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="mt-6">
+                      <CardHeader>
+                        <CardTitle>Change Password</CardTitle>
+                        <CardDescription>
+                          Update your account password
+                        </CardDescription>
+                      </CardHeader>
+                      <form onSubmit={handleUpdatePassword}>
+                        <CardContent className="space-y-4">
+                          <div className="grid grid-cols-1 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="current-password">Current Password</Label>
+                              <Input
+                                id="current-password"
+                                type="password"
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="new-password">New Password</Label>
+                              <Input
+                                id="new-password"
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="confirm-password">Confirm New Password</Label>
+                              <Input
+                                id="confirm-password"
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                              />
+                            </div>
+                          </div>
+                        </CardContent>
+                        <CardFooter className="flex justify-between">
+                          <Button variant="destructive" type="button" onClick={handleLogout} disabled={isLoading}>
+                            {isLoading ? 'Logging out...' : 'Log Out'}
+                          </Button>
+                          <Button type="submit" disabled={isUpdatingPassword}>
+                            {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                          </Button>
+                        </CardFooter>
+                      </form>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="wallet">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Connected Wallet</CardTitle>
+                        <CardDescription>
+                          Manage your Web3 wallet connections
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            {walletAddress ? (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium">
+                                    {shortenAddress(walletAddress)}
+                                  </p>
+                                  <Badge className="bg-green-500/20 text-green-500">Connected</Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {walletType || 'Unknown wallet'}
+                                </p>
+                              </>
+                            ) : (
+                              <p className="text-muted-foreground">No wallet connected</p>
+                            )}
+                          </div>
+                          <ConnectWallet />
+                        </div>
+                        
+                        <div className="rounded-md bg-yellow-50 dark:bg-yellow-900/20 p-4">
+                          <div className="flex items-start">
+                            <Shield className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                            <div className="ml-3">
+                              <h3 className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
+                                Security Note
+                              </h3>
+                              <div className="mt-2 text-sm text-yellow-600 dark:text-yellow-400">
+                                <p>
+                                  Your wallet is used to sign transactions on the blockchain. We never store your private keys.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="billing">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Subscription Plan</CardTitle>
+                        <CardDescription>
+                          Manage your subscription and billing information
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-10">
+                          <p className="text-muted-foreground">
+                            You don't have any active subscriptions.
+                          </p>
+                          <Button className="mt-4">
+                            Upgrade to Pro
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="notifications">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Notification Settings</CardTitle>
+                        <CardDescription>
+                          Manage how you receive notifications
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-10">
+                          <p className="text-muted-foreground">
+                            Notification settings coming soon.
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </div>
             </FadeIn>
           </div>
         </section>
       </main>
+      
       <Footer />
     </div>
   );

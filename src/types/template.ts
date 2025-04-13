@@ -3,7 +3,7 @@ export interface Template {
   id: string;
   name: string;
   description: string;
-  category: 'meme' | 'nft' | 'dao' | 'defi' | 'gamefi' | 'social';
+  category: 'meme' | 'nft' | 'dao' | 'defi' | 'gamefi' | 'social' | string;
   thumbnail_url: string;
   tags?: string[];
   is_premium: boolean;

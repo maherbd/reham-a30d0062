@@ -115,9 +115,9 @@ export function ConnectWallet() {
     console.log(`Connecting to ${walletId}...`);
     
     if (walletId === 'metamask' && isWeb3Available()) {
-      const connectedAccount = await connectWallet();
-      if (connectedAccount) {
-        setAccount(connectedAccount);
+      const connectedWallet = await connectWallet();
+      if (connectedWallet) {
+        setAccount(connectedWallet.walletAddress);
         setConnected(true);
         setOpen(false);
       }

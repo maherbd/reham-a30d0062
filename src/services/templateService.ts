@@ -14,7 +14,12 @@ export async function fetchTemplates(): Promise<Template[]> {
       throw error;
     }
 
-    return data || [];
+    // Transform data to match Template interface
+    return data?.map(template => ({
+      ...template,
+      tags: template.tags || [],
+      category: template.category || 'meme' // Default to a valid category if undefined
+    })) || [];
   } catch (error) {
     console.error('Error fetching templates:', error);
     toast.error('Failed to load templates');
@@ -34,7 +39,12 @@ export async function fetchTemplateById(id: string): Promise<Template | null> {
       throw error;
     }
 
-    return data;
+    // Transform to match Template interface
+    return data ? {
+      ...data,
+      tags: data.tags || [],
+      category: data.category || 'meme' // Default to a valid category if undefined
+    } : null;
   } catch (error) {
     console.error(`Error fetching template with ID ${id}:`, error);
     toast.error('Failed to load template details');

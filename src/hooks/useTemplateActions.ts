@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { createWebsite } from '@/services/websiteService';
 
 export function useTemplateActions() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, login } = useAuth();
+  const { user } = useAuth();
 
   const useTemplate = async (templateId: string) => {
     try {
@@ -24,19 +25,10 @@ export function useTemplateActions() {
       }
       
       // Create a new website based on the template
-      const { data, error } = await supabase
-        .from('websites')
-        .insert({
-          user_id: user.id,
-          template_id: templateId,
-          name: 'My New Website',
-          published: false
-        })
-        .select()
-        .single();
-        
-      if (error) {
-        throw error;
+      const website = await createWebsite(user.id, templateId, 'My New Website');
+      
+      if (!website) {
+        throw new Error('Failed to create website');
       }
       
       toast.success('Template added to your dashboard');
