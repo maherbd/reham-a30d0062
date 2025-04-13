@@ -17,7 +17,7 @@ export async function fetchTemplates(): Promise<Template[]> {
     // Transform data to match Template interface
     return data?.map(template => ({
       ...template,
-      tags: template.tags || [],
+      tags: [], // Initialize with empty array since it doesn't exist in the database
       category: template.category || 'meme' // Default to a valid category if undefined
     })) || [];
   } catch (error) {
@@ -42,7 +42,7 @@ export async function fetchTemplateById(id: string): Promise<Template | null> {
     // Transform to match Template interface
     return data ? {
       ...data,
-      tags: data.tags || [],
+      tags: [], // Initialize with empty array since it doesn't exist in the database
       category: data.category || 'meme' // Default to a valid category if undefined
     } : null;
   } catch (error) {

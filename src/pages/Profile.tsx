@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -14,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, WalletX, CreditCard, Shield, Bell } from 'lucide-react';
+import { User, Wallet, CreditCard, Shield, Bell } from 'lucide-react';
 
 const Profile = () => {
   const { user, logout } = useAuth();
@@ -34,7 +33,6 @@ const Profile = () => {
       return;
     }
 
-    // Get user email from auth
     const getUserEmail = async () => {
       const { data } = await supabase.auth.getUser();
       if (data?.user?.email) {
@@ -42,7 +40,6 @@ const Profile = () => {
       }
     };
 
-    // Get wallet info from custom table
     const getWalletInfo = async () => {
       if (user.id) {
         const { data, error } = await supabase
@@ -121,7 +118,7 @@ const Profile = () => {
                       <span>Account</span>
                     </TabsTrigger>
                     <TabsTrigger value="wallet" className="flex items-center gap-1">
-                      <WalletX className="h-4 w-4" />
+                      <Wallet className="h-4 w-4" />
                       <span>Wallet</span>
                     </TabsTrigger>
                     <TabsTrigger value="billing" className="flex items-center gap-1">

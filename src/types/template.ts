@@ -5,7 +5,7 @@ export interface Template {
   description: string;
   category: 'meme' | 'nft' | 'dao' | 'defi' | 'gamefi' | 'social' | string;
   thumbnail_url: string;
-  tags?: string[];
+  tags: string[];
   is_premium: boolean;
   content: any;
   created_at?: string;
