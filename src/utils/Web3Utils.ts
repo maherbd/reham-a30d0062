@@ -1,4 +1,5 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Define supported networks
@@ -43,7 +44,7 @@ export const isWeb3Available = () => {
   return typeof window !== 'undefined' && typeof window.ethereum !== 'undefined';
 };
 
-// Connect to Web3 wallet
+// Connect to Web3 wallet and register/update in Supabase
 export const connectWallet = async () => {
   if (!isWeb3Available()) {
     toast.error('No Web3 wallet detected. Please install MetaMask or another Web3 wallet.');
@@ -53,8 +54,53 @@ export const connectWallet = async () => {
   try {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     if (accounts.length > 0) {
-      toast.success('Wallet connected successfully!');
-      return accounts[0];
+      const walletAddress = accounts[0];
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      
+      // Determine blockchain based on chainId
+      let blockchain = 'ethereum';
+      if (chainId === '0x89') blockchain = 'polygon';
+      else if (chainId === '0xa4b1') blockchain = 'arbitrum';
+      
+      // Get wallet type (assuming MetaMask as default)
+      let walletType = 'MetaMask';
+      if (window.ethereum.isMetaMask) walletType = 'MetaMask';
+      else if (window.ethereum.isCoinbaseWallet) walletType = 'Coinbase Wallet';
+      else if (window.ethereum.isWalletConnect) walletType = 'WalletConnect';
+      
+      // Check if user is logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // Update existing user with wallet info
+        const { data, error } = await supabase
+          .from('users')
+          .upsert({
+            id: session.user.id,
+            wallet_address: walletAddress,
+            wallet_type: walletType,
+            blockchain: blockchain
+          })
+          .select();
+          
+        if (error) throw error;
+        
+        return {
+          walletAddress,
+          walletType,
+          blockchain
+        };
+      } else {
+        // Store wallet info in local storage for later use
+        localStorage.setItem('pendingWallet', JSON.stringify({
+          walletAddress,
+          walletType,
+          blockchain
+        }));
+        
+        toast.info('Please login or create an account to connect your wallet');
+        return null;
+      }
     }
     return null;
   } catch (error) {
