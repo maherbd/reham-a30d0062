@@ -148,10 +148,12 @@ export async function recordTemplateView(templateId: string): Promise<void> {
     }
 
     // Update template popularity score
-    await supabase
+    const { error } = await supabase
       .from('templates')
-      .update({ popularity: supabase.rpc('increment', { x: 1 }) })
+      .update({ popularity: supabase.sql`popularity + 1` })
       .eq('id', templateId);
+
+    if (error) throw error;
 
   } catch (error) {
     console.error('Error recording template view:', error);
@@ -199,10 +201,12 @@ export async function recordTemplateUse(templateId: string): Promise<void> {
     }
 
     // Update template popularity score (use counts more than views)
-    await supabase
+    const { error } = await supabase
       .from('templates')
-      .update({ popularity: supabase.rpc('increment', { x: 5 }) })
+      .update({ popularity: supabase.sql`popularity + 5` })
       .eq('id', templateId);
+
+    if (error) throw error;
 
   } catch (error) {
     console.error('Error recording template use:', error);

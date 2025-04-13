@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -9,6 +10,7 @@ import {
   SheetClose
 } from '@/components/ui/sheet';
 import { Menu, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -171,5 +173,3 @@ export function HeaderWithPricing() {
     </header>
   );
 }
-
-export { Header } from "@/components/layout/Header";

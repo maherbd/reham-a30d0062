@@ -61,16 +61,18 @@ export async function createTransaction(
   paymentMethod: string = 'solana'
 ): Promise<Transaction | null> {
   try {
+    const transactionData = {
+      user_id: userId,
+      plan_id: planId,
+      amount,
+      currency,
+      payment_method: paymentMethod,
+      status: 'pending' as 'pending' | 'completed' | 'failed'
+    };
+    
     const { data, error } = await supabase
       .from('transactions')
-      .insert({
-        user_id: userId,
-        plan_id: planId,
-        amount,
-        currency,
-        payment_method: paymentMethod,
-        status: 'pending'
-      })
+      .insert(transactionData)
       .select()
       .single();
 
@@ -78,7 +80,7 @@ export async function createTransaction(
       throw error;
     }
 
-    return data;
+    return data as Transaction;
   } catch (error) {
     console.error('Error creating transaction:', error);
     toast.error('Failed to create transaction');
@@ -125,7 +127,7 @@ export async function fetchUserTransactions(userId: string): Promise<Transaction
       throw error;
     }
 
-    return data || [];
+    return data as Transaction[];
   } catch (error) {
     console.error('Error fetching user transactions:', error);
     toast.error('Failed to load transactions');
