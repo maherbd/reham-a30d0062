@@ -3,14 +3,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { useTemplate as useTemplateSvc } from '@/services/templateService';
+import { useTemplate } from '@/services/templateService';
 
 export function useTemplateActions() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const useTemplate = async (templateId: string) => {
+  const handleUseTemplate = async (templateId: string) => {
     try {
       setIsLoading(true);
       
@@ -24,7 +24,7 @@ export function useTemplateActions() {
       }
       
       // Use template service to create website based on the template
-      const result = await useTemplateSvc(templateId, user.id);
+      const result = await useTemplate(templateId, user.id);
       
       if (result) {
         navigate('/dashboard');
@@ -42,5 +42,5 @@ export function useTemplateActions() {
     }
   };
   
-  return { useTemplate, isLoading };
+  return { useTemplate: handleUseTemplate, isLoading };
 }

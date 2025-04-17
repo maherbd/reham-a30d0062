@@ -32,6 +32,7 @@ const TemplateDetail = () => {
           setTemplate(templateData);
         } else {
           navigate('/templates');
+          toast.error('Template not found');
         }
       }
       setLoading(false);
@@ -124,6 +125,7 @@ const TemplateDetail = () => {
               </Button>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* Left column with template details */}
                 <div className="order-2 lg:order-1">
                   <h1 className="text-3xl md:text-4xl font-bold">{template.name}</h1>
                   
@@ -139,6 +141,7 @@ const TemplateDetail = () => {
                     {template.description}
                   </p>
                   
+                  {/* Features section */}
                   <div className="mt-8">
                     <h3 className="text-xl font-semibold mb-4">Features</h3>
                     <ul className="space-y-3">
@@ -153,6 +156,7 @@ const TemplateDetail = () => {
                     </ul>
                   </div>
                   
+                  {/* Web3 Integration card */}
                   <div className="mt-8">
                     <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
                       <CardContent className="p-6">
@@ -177,6 +181,7 @@ const TemplateDetail = () => {
                     </Card>
                   </div>
                   
+                  {/* Action buttons */}
                   <div className="mt-10 space-y-4">
                     <Button 
                       onClick={handleUseTemplate} 
@@ -195,6 +200,7 @@ const TemplateDetail = () => {
                   </div>
                 </div>
                 
+                {/* Right column with template preview */}
                 <div className="order-1 lg:order-2">
                   <div className="overflow-hidden rounded-xl border border-border/50 shadow-lg">
                     <img
@@ -236,5 +242,15 @@ const TemplateDetail = () => {
     </div>
   );
 };
+
+// Define features variable used in rendering
+const features = [
+  "Responsive design for all devices",
+  "Web3 wallet integration",
+  "Dark & light mode support",
+  "SEO optimized",
+  "Fast performance",
+  "Customizable components",
+];
 
 export default TemplateDetail;

@@ -147,10 +147,10 @@ export async function recordTemplateView(templateId: string): Promise<void> {
       if (insertError) throw insertError;
     }
 
-    // Update template popularity score
+    // Update template popularity score - fixed approach without using .sql property
     const { error } = await supabase
       .from('templates')
-      .update({ popularity: supabase.sql`popularity + 1` })
+      .update({ popularity: increment('popularity', 1) })
       .eq('id', templateId);
 
     if (error) throw error;
@@ -200,10 +200,10 @@ export async function recordTemplateUse(templateId: string): Promise<void> {
       if (insertError) throw insertError;
     }
 
-    // Update template popularity score (use counts more than views)
+    // Update template popularity score (use counts more than views) - fixed approach without using .sql property
     const { error } = await supabase
       .from('templates')
-      .update({ popularity: supabase.sql`popularity + 5` })
+      .update({ popularity: increment('popularity', 5) })
       .eq('id', templateId);
 
     if (error) throw error;
@@ -212,6 +212,13 @@ export async function recordTemplateUse(templateId: string): Promise<void> {
     console.error('Error recording template use:', error);
     // Don't show toast to users for analytics errors
   }
+}
+
+// Helper function to handle incrementing a column value without using .sql property
+function increment(column: string, amount = 1) {
+  return {
+    [column]: supabase.rpc('increment_column', { table_name: 'templates', column_name: column, record_id_column: 'id', amount })
+  }[column];
 }
 
 export async function useTemplate(templateId: string, userId: string): Promise<boolean> {
