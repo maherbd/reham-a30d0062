@@ -11,11 +11,15 @@ import { PricingPlan } from '@/types/template';
 import { fetchPricingPlans } from '@/services/pricingService';
 import { PricingCard } from '@/components/pricing/PricingCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PaymentForm } from '@/components/pricing/PaymentForm';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const Pricing = () => {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -34,6 +38,11 @@ const Pricing = () => {
 
   const toggleBillingPeriod = () => {
     setBillingPeriod(prev => prev === 'monthly' ? 'yearly' : 'monthly');
+  };
+
+  const handleSelectPlan = (plan: PricingPlan) => {
+    setSelectedPlan(plan);
+    setPaymentDialogOpen(true);
   };
 
   return (
@@ -79,6 +88,7 @@ const Pricing = () => {
                       key={plan.id}
                       plan={plan}
                       billingPeriod={billingPeriod}
+                      onSelectPlan={handleSelectPlan}
                     />
                   ))}
                 </FadeInStagger>
@@ -118,6 +128,18 @@ const Pricing = () => {
         </section>
       </main>
       <Footer />
+
+      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          {selectedPlan && (
+            <PaymentForm 
+              plan={selectedPlan} 
+              billingPeriod={billingPeriod}
+              onClose={() => setPaymentDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
