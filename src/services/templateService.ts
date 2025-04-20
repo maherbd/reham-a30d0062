@@ -147,12 +147,12 @@ export async function recordTemplateView(templateId: string): Promise<void> {
       if (insertError) throw insertError;
     }
 
-    // Update template popularity score - Fixed: Use string for table_name and column_name
+    // Update template popularity score
     await supabase.rpc('increment_column', {
       table_name: 'templates',
       column_name: 'popularity',
-      record_id_column: 'id',
       record_id: templateId,
+      record_id_column: 'id',
       amount: 1
     });
 
@@ -201,12 +201,12 @@ export async function recordTemplateUse(templateId: string): Promise<void> {
       if (insertError) throw insertError;
     }
 
-    // Update template popularity score - Fixed: Use string for table_name and column_name
+    // Update template popularity score
     await supabase.rpc('increment_column', {
       table_name: 'templates',
       column_name: 'popularity',
-      record_id_column: 'id',
       record_id: templateId,
+      record_id_column: 'id',
       amount: 5
     });
 

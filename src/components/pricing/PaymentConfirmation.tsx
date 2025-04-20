@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Transaction } from '@/types/template';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';
+import { verifyPayment, completePayment } from '@/services/solanaPaymentService';
 
 interface PaymentConfirmationProps {
   transaction: Transaction;
@@ -14,9 +15,55 @@ interface PaymentConfirmationProps {
 
 export function PaymentConfirmation({ transaction, isOpen, onClose }: PaymentConfirmationProps) {
   const navigate = useNavigate();
+  const [status, setStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>(
+    transaction.status as 'pending' | 'processing' | 'completed' | 'failed'
+  );
+  const [isVerifying, setIsVerifying] = useState(false);
+  
+  useEffect(() => {
+    // Check payment status on mount and when transaction changes
+    if (transaction.status === 'pending' || transaction.status === 'processing') {
+      checkPaymentStatus();
+      
+      // Set up interval to check payment status
+      const interval = setInterval(checkPaymentStatus, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [transaction]);
+  
+  const checkPaymentStatus = async () => {
+    if (status === 'completed' || status === 'failed' || isVerifying) return;
+    
+    try {
+      setIsVerifying(true);
+      
+      const result = await verifyPayment(
+        transaction.id,
+        Number(transaction.amount),
+        transaction.currency
+      );
+      
+      if (result.success) {
+        // Use a simulated transaction hash for demo purposes
+        // In a real implementation, this would be the actual transaction hash from the blockchain
+        const txHash = `${Date.now().toString(16)}_${Math.random().toString(36).substring(2, 8)}`;
+        
+        // Complete the payment with the transaction hash
+        const completed = await completePayment(transaction.id, txHash);
+        
+        if (completed) {
+          setStatus('completed');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
   
   const renderStatus = () => {
-    switch (transaction.status) {
+    switch (status) {
       case 'completed':
         return (
           <div className="flex flex-col items-center py-6">
@@ -51,7 +98,7 @@ export function PaymentConfirmation({ transaction, isOpen, onClose }: PaymentCon
   };
   
   const handleClose = () => {
-    if (transaction.status === 'completed') {
+    if (status === 'completed') {
       navigate('/dashboard');
     } else {
       onClose();
@@ -72,8 +119,18 @@ export function PaymentConfirmation({ transaction, isOpen, onClose }: PaymentCon
         
         <DialogFooter>
           <Button onClick={handleClose}>
-            {transaction.status === 'completed' ? 'Go to Dashboard' : 'Close'}
+            {status === 'completed' ? 'Go to Dashboard' : 'Close'}
           </Button>
+          
+          {(status === 'pending' || status === 'processing') && (
+            <Button 
+              variant="outline" 
+              onClick={checkPaymentStatus} 
+              disabled={isVerifying}
+            >
+              {isVerifying ? 'Checking...' : 'Check Status'}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -11,6 +12,17 @@
 
   <body>
     <div id="root"></div>
+    <!-- Phantom Wallet Script -->
+    <script>
+      // Check if Phantom is installed
+      window.addEventListener('load', () => {
+        if (!window.solana || !window.solana.isPhantom) {
+          console.log('Phantom wallet is not installed');
+        } else {
+          console.log('Phantom wallet is installed');
+        }
+      });
+    </script>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
