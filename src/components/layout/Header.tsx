@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -13,11 +12,12 @@ import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'Templates', href: '/templates' },
-  { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Tokenomics', href: '/tokenomics' },
-  { name: 'Resources', href: '/resources' },
+  { name: "Home", href: "/" },
+  { name: "Templates", href: "/templates" },
+  { name: "Dashboard", href: "/dashboard" },
+  { name: "Analytics", href: "/analytics" },
+  { name: "Pricing", href: "/pricing" },
+  { name: "Help", href: "/help" },
 ];
 
 export function Header() {

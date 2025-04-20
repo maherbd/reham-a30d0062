@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,8 +18,82 @@ import Profile from "./pages/Profile";
 import Builder from "./pages/Builder";
 import Pricing from "./pages/Pricing";
 import SubscriptionManagement from "./pages/SubscriptionManagement";
+import AnalyticsDashboard from './pages/Analytics';
+import Help from './pages/Help';
+import AdminPanel from './pages/Admin';
 
 const queryClient = new QueryClient();
+
+const routes = [
+  {
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/templates",
+    element: <Templates />,
+  },
+  {
+    path: "/templates/:id",
+    element: <TemplateDetail />,
+  },
+  {
+    path: "/dashboard",
+    element: <Dashboard />,
+  },
+  {
+    path: "/builder/:id",
+    element: <Builder />,
+  },
+  {
+    path: "/tokenomics",
+    element: <Tokenomics />,
+  },
+  {
+    path: "/resources",
+    element: <Resources />,
+  },
+  {
+    path: "/contact",
+    element: <Contact />,
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/register",
+    element: <Register />,
+  },
+  {
+    path: "/profile",
+    element: <Profile />,
+  },
+  {
+    path: "/pricing",
+    element: <Pricing />,
+  },
+  {
+    path: "/subscription",
+    element: <SubscriptionManagement />,
+  },
+  {
+    path: "/analytics",
+    element: <AnalyticsDashboard />,
+  },
+  {
+    path: "/help",
+    element: <Help />,
+  },
+  {
+    path: "/admin",
+    element: <AdminPanel />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+];
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -31,20 +104,9 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/templates" element={<Templates />} />
-              <Route path="/templates/:id" element={<TemplateDetail />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/builder/:id" element={<Builder />} />
-              <Route path="/tokenomics" element={<Tokenomics />} />
-              <Route path="/resources" element={<Resources />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/subscription" element={<SubscriptionManagement />} />
-              <Route path="*" element={<NotFound />} />
+              {routes.map((route) => (
+                <Route key={route.path} path={route.path} element={route.element} />
+              ))}
             </Routes>
           </BrowserRouter>
         </div>
