@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -21,15 +20,12 @@ export function PaymentConfirmation({ transaction, isOpen, onClose }: PaymentCon
   const [isVerifying, setIsVerifying] = useState(false);
   
   useEffect(() => {
-    // Check payment status on mount and when transaction changes
-    if (transaction.status === 'pending' || transaction.status === 'processing') {
+    if (status === 'pending' || status === 'processing') {
       checkPaymentStatus();
-      
-      // Set up interval to check payment status
       const interval = setInterval(checkPaymentStatus, 5000);
       return () => clearInterval(interval);
     }
-  }, [transaction]);
+  }, [status]);
   
   const checkPaymentStatus = async () => {
     if (status === 'completed' || status === 'failed' || isVerifying) return;
@@ -44,11 +40,8 @@ export function PaymentConfirmation({ transaction, isOpen, onClose }: PaymentCon
       );
       
       if (result.success) {
-        // Use a simulated transaction hash for demo purposes
-        // In a real implementation, this would be the actual transaction hash from the blockchain
         const txHash = `${Date.now().toString(16)}_${Math.random().toString(36).substring(2, 8)}`;
         
-        // Complete the payment with the transaction hash
         const completed = await completePayment(transaction.id, txHash);
         
         if (completed) {

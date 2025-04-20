@@ -1,25 +1,75 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { Template } from '@/types/template';
 import { toast } from 'sonner';
-import { Template, TemplateMetrics } from '@/types/template';
+
+export async function useTemplate(templateId: string, userId: string): Promise<boolean> {
+  try {
+    // First fetch the template
+    const { data: template, error: templateError } = await supabase
+      .from('templates')
+      .select('*')
+      .eq('id', templateId)
+      .single();
+    
+    if (templateError) throw templateError;
+    if (!template) throw new Error('Template not found');
+    
+    // Create a new website based on the template
+    const { data: website, error: websiteError } = await supabase
+      .from('websites')
+      .insert({
+        user_id: userId,
+        template_id: templateId,
+        name: `${template.name} Website`,
+        published: false
+      })
+      .select()
+      .single();
+    
+    if (websiteError) throw websiteError;
+    if (!website) throw new Error('Failed to create website');
+    
+    // Update template metrics
+    const { error: metricsError } = await supabase
+      .from('template_metrics')
+      .upsert({
+        template_id: templateId,
+        uses: template.uses + 1
+      });
+    
+    if (metricsError) {
+      console.error('Error updating template metrics:', metricsError);
+      // Don't throw here as this is not critical
+    }
+    
+    toast.success('Website created successfully!');
+    return true;
+    
+  } catch (error) {
+    console.error('Error using template:', error);
+    toast.error('Failed to create website from template');
+    return false;
+  }
+}
 
 export async function fetchTemplates(): Promise<Template[]> {
   try {
     const { data, error } = await supabase
       .from('templates')
-      .select('*')
+      .select(`
+        *,
+        template_metrics (
+          uses,
+          views,
+          trending_score
+        )
+      `)
+      .eq('is_premium', false)
       .order('created_at', { ascending: false });
-
-    if (error) {
-      throw error;
-    }
-
-    // Transform data to match Template interface
-    return data?.map(template => ({
-      ...template,
-      tags: [], // Initialize with empty array since it doesn't exist in the database
-      category: template.category || 'meme' // Default to a valid category if undefined
-    })) || [];
+    
+    if (error) throw error;
+    return data || [];
+    
   } catch (error) {
     console.error('Error fetching templates:', error);
     toast.error('Failed to load templates');
@@ -27,221 +77,27 @@ export async function fetchTemplates(): Promise<Template[]> {
   }
 }
 
-export async function fetchTemplateById(id: string): Promise<Template | null> {
+export async function fetchTemplateById(templateId: string): Promise<Template | null> {
   try {
     const { data, error } = await supabase
       .from('templates')
-      .select('*')
-      .eq('id', id)
+      .select(`
+        *,
+        template_metrics (
+          uses,
+          views,
+          trending_score
+        )
+      `)
+      .eq('id', templateId)
       .single();
-
-    if (error) {
-      throw error;
-    }
-
-    // Record a view of this template
-    await recordTemplateView(id);
-
-    // Transform to match Template interface
-    return data ? {
-      ...data,
-      tags: [], // Initialize with empty array since it doesn't exist in the database
-      category: data.category || 'meme' // Default to a valid category if undefined
-    } : null;
+    
+    if (error) throw error;
+    return data || null;
+    
   } catch (error) {
-    console.error(`Error fetching template with ID ${id}:`, error);
-    toast.error('Failed to load template details');
+    console.error('Error fetching template:', error);
+    toast.error('Failed to load template');
     return null;
-  }
-}
-
-export async function fetchTrendingTemplates(limit: number = 6): Promise<Template[]> {
-  try {
-    const { data, error } = await supabase
-      .from('templates')
-      .select('*')
-      .order('popularity', { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      throw error;
-    }
-
-    // Transform data to match Template interface
-    return data?.map(template => ({
-      ...template,
-      tags: [], // Initialize with empty array since it doesn't exist in the database
-      category: template.category || 'meme' // Default to a valid category if undefined
-    })) || [];
-  } catch (error) {
-    console.error('Error fetching trending templates:', error);
-    toast.error('Failed to load trending templates');
-    return [];
-  }
-}
-
-export async function fetchPremiumTemplates(limit: number = 6): Promise<Template[]> {
-  try {
-    const { data, error } = await supabase
-      .from('templates')
-      .select('*')
-      .eq('is_premium', true)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      throw error;
-    }
-
-    // Transform data to match Template interface
-    return data?.map(template => ({
-      ...template,
-      tags: [], // Initialize with empty array since it doesn't exist in the database
-      category: template.category || 'meme' // Default to a valid category if undefined
-    })) || [];
-  } catch (error) {
-    console.error('Error fetching premium templates:', error);
-    toast.error('Failed to load premium templates');
-    return [];
-  }
-}
-
-export async function recordTemplateView(templateId: string): Promise<void> {
-  try {
-    // Check if there's already a metrics record for this template
-    const { data, error: fetchError } = await supabase
-      .from('template_metrics')
-      .select('*')
-      .eq('template_id', templateId)
-      .maybeSingle();
-
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      throw fetchError;
-    }
-
-    const timestamp = new Date().toISOString();
-
-    if (data) {
-      // Update existing metrics record
-      const { error: updateError } = await supabase
-        .from('template_metrics')
-        .update({
-          views: data.views + 1,
-          last_viewed_at: timestamp,
-          updated_at: timestamp
-        })
-        .eq('id', data.id);
-
-      if (updateError) throw updateError;
-    } else {
-      // Create new metrics record
-      const { error: insertError } = await supabase
-        .from('template_metrics')
-        .insert({
-          template_id: templateId,
-          views: 1,
-          uses: 0,
-          last_viewed_at: timestamp
-        });
-
-      if (insertError) throw insertError;
-    }
-
-    // Update template popularity score
-    await supabase.rpc('increment_column', {
-      table_name: 'templates',
-      column_name: 'popularity',
-      record_id: templateId,
-      record_id_column: 'id',
-      amount: 1
-    });
-
-  } catch (error) {
-    console.error('Error recording template view:', error);
-    // Don't show toast to users for analytics errors
-  }
-}
-
-export async function recordTemplateUse(templateId: string): Promise<void> {
-  try {
-    // Check if there's already a metrics record for this template
-    const { data, error: fetchError } = await supabase
-      .from('template_metrics')
-      .select('*')
-      .eq('template_id', templateId)
-      .maybeSingle();
-
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      throw fetchError;
-    }
-
-    const timestamp = new Date().toISOString();
-
-    if (data) {
-      // Update existing metrics record
-      const { error: updateError } = await supabase
-        .from('template_metrics')
-        .update({
-          uses: data.uses + 1,
-          updated_at: timestamp
-        })
-        .eq('id', data.id);
-
-      if (updateError) throw updateError;
-    } else {
-      // Create new metrics record
-      const { error: insertError } = await supabase
-        .from('template_metrics')
-        .insert({
-          template_id: templateId,
-          views: 0,
-          uses: 1,
-        });
-
-      if (insertError) throw insertError;
-    }
-
-    // Update template popularity score
-    await supabase.rpc('increment_column', {
-      table_name: 'templates',
-      column_name: 'popularity',
-      record_id: templateId,
-      record_id_column: 'id',
-      amount: 5
-    });
-
-  } catch (error) {
-    console.error('Error recording template use:', error);
-    // Don't show toast to users for analytics errors
-  }
-}
-
-export async function useTemplate(templateId: string, userId: string): Promise<boolean> {
-  try {
-    // Create a website instance based on the template
-    const { data: websiteData, error: websiteError } = await supabase
-      .from('websites')
-      .insert({
-        user_id: userId,
-        template_id: templateId,
-        name: 'New Website',
-        published: false
-      })
-      .select()
-      .single();
-
-    if (websiteError) {
-      throw websiteError;
-    }
-
-    // Record template usage for analytics
-    await recordTemplateUse(templateId);
-
-    toast.success('Template added to your dashboard');
-    return true;
-  } catch (error) {
-    console.error('Error using template:', error);
-    toast.error('Failed to use template');
-    return false;
   }
 }
