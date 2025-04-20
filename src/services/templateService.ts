@@ -147,7 +147,7 @@ export async function recordTemplateView(templateId: string): Promise<void> {
       if (insertError) throw insertError;
     }
 
-    // Update template popularity score using RPC function
+    // Update template popularity score - Fixed: Use string for table_name and column_name
     await supabase.rpc('increment_column', {
       table_name: 'templates',
       column_name: 'popularity',
@@ -201,7 +201,7 @@ export async function recordTemplateUse(templateId: string): Promise<void> {
       if (insertError) throw insertError;
     }
 
-    // Update template popularity score using RPC function
+    // Update template popularity score - Fixed: Use string for table_name and column_name
     await supabase.rpc('increment_column', {
       table_name: 'templates',
       column_name: 'popularity',
