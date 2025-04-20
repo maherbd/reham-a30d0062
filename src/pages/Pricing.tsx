@@ -7,12 +7,13 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { FadeIn, FadeInStagger } from '@/components/transitions/FadeIn';
 import { Check } from 'lucide-react';
-import { PricingPlan } from '@/types/template';
+import { PricingPlan, Transaction } from '@/types/template';
 import { fetchPricingPlans } from '@/services/pricingService';
 import { PricingCard } from '@/components/pricing/PricingCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PaymentForm } from '@/components/pricing/PaymentForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { PaymentConfirmation } from '@/components/pricing/PaymentConfirmation';
 
 const Pricing = () => {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
@@ -20,6 +21,8 @@ const Pricing = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [transaction, setTransaction] = useState<Transaction | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -43,6 +46,12 @@ const Pricing = () => {
   const handleSelectPlan = (plan: PricingPlan) => {
     setSelectedPlan(plan);
     setPaymentDialogOpen(true);
+  };
+  
+  const handlePaymentSuccess = (transaction: Transaction) => {
+    setTransaction(transaction);
+    setPaymentDialogOpen(false);
+    setShowConfirmation(true);
   };
 
   return (
@@ -135,11 +144,21 @@ const Pricing = () => {
             <PaymentForm 
               plan={selectedPlan} 
               billingPeriod={billingPeriod}
+              isOpen={paymentDialogOpen}
               onClose={() => setPaymentDialogOpen(false)}
+              onSuccess={handlePaymentSuccess}
             />
           )}
         </DialogContent>
       </Dialog>
+      
+      {transaction && (
+        <PaymentConfirmation 
+          transaction={transaction}
+          isOpen={showConfirmation}
+          onClose={() => setShowConfirmation(false)}
+        />
+      )}
     </div>
   );
 };
