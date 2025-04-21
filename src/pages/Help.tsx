@@ -557,7 +557,7 @@ const accountTopics = [
       <div className="space-y-4">
         <p>To manage your subscription:</p>
         <ol className="list-decimal pl-5 space-y-2">
-          <li>Go to Account > Subscription Management</li>
+          <li>Go to Account {'>'} Subscription Management</li>
           <li>View your current plan and renewal date</li>
           <li>Upgrade or downgrade your plan as needed</li>
           <li>Update your payment information</li>

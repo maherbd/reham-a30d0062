@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export interface HistoryState<T> {
   past: T[];
@@ -70,6 +70,36 @@ export const useHistory = <T,>(initialPresent: T): HistoryActions<T> => {
       future: [],
     });
   }, []);
+
+  // Add keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if user is in an input field or textarea
+      const target = event.target as HTMLElement;
+      const isInputField = 
+        target.tagName === 'INPUT' || 
+        target.tagName === 'TEXTAREA' || 
+        target.isContentEditable;
+      
+      // Undo: Ctrl+Z
+      if (event.ctrlKey && event.key === 'z' && !isInputField) {
+        event.preventDefault();
+        undo();
+      }
+      
+      // Redo: Ctrl+Y or Ctrl+Shift+Z
+      if ((event.ctrlKey && event.key === 'y') || 
+          (event.ctrlKey && event.shiftKey && event.key === 'z') && !isInputField) {
+        event.preventDefault();
+        redo();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [undo, redo]);
 
   return { state, canUndo, canRedo, undo, redo, set, reset };
 };
