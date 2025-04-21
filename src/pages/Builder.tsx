@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
@@ -23,20 +22,9 @@ import { PreviewControls } from '@/components/builder/PreviewControls';
 import { SEOSettings } from '@/components/builder/SEOSettings';
 import { ComponentConfigPanel } from '@/components/builder/ComponentConfigPanel';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { WebsiteSettings } from '@/types/website';
 
 type DeviceType = 'desktop' | 'tablet' | 'mobile';
-
-interface WebsiteSettings {
-  content: any[];
-  seo?: {
-    title: string;
-    description: string;
-    keywords: string;
-    ogImage: string;
-    canonicalUrl: string;
-    noIndex: boolean;
-  };
-}
 
 const Builder = () => {
   const { id } = useParams<{ id: string }>();
@@ -54,7 +42,6 @@ const Builder = () => {
   const [selectedComponent, setSelectedComponent] = useState<any | null>(null);
   const isMobile = useIsMobile();
   
-  // Setup undo/redo history
   const initialSettings: WebsiteSettings = {
     content: [],
     seo: {
@@ -77,7 +64,6 @@ const Builder = () => {
     reset: resetHistory 
   } = useHistory<WebsiteSettings>(initialSettings);
   
-  // Fetch website data
   useEffect(() => {
     if (!user) {
       toast.error('You need to be logged in');
@@ -101,8 +87,7 @@ const Builder = () => {
         setWebsite(data);
         setSubdomain(data.subdomain || '');
         
-        // Initialize history with website settings
-        const settings = data.settings as WebsiteSettings || initialSettings;
+        const settings = (data.settings as any)?.websiteSettings as WebsiteSettings || initialSettings;
         resetHistory(settings);
         
       } catch (error) {
@@ -117,37 +102,6 @@ const Builder = () => {
     fetchWebsite();
   }, [id, user, navigate, resetHistory]);
   
-  // Handle updates to website settings
-  const updateWebsiteSettings = (newSettings: Partial<WebsiteSettings>) => {
-    const updatedSettings = {
-      ...historyState.present,
-      ...newSettings
-    };
-    setHistory(updatedSettings);
-  };
-  
-  // Handle component updates
-  const handleUpdateComponent = (componentId: string, updates: any) => {
-    const currentContent = [...historyState.present.content];
-    const componentIndex = currentContent.findIndex(c => c.id === componentId);
-    
-    if (componentIndex !== -1) {
-      const updatedComponent = {
-        ...currentContent[componentIndex],
-        ...updates
-      };
-      
-      const newContent = [
-        ...currentContent.slice(0, componentIndex),
-        updatedComponent,
-        ...currentContent.slice(componentIndex + 1)
-      ];
-      
-      updateWebsiteSettings({ content: newContent });
-      setSelectedComponent(updatedComponent);
-    }
-  };
-  
   const saveWebsite = async () => {
     if (!website) return;
     
@@ -157,7 +111,9 @@ const Builder = () => {
         .from('websites')
         .update({
           name: website.name,
-          settings: historyState.present,
+          settings: {
+            websiteSettings: historyState.present
+          } as Json,
           updated_at: new Date().toISOString()
         })
         .eq('id', website.id);
@@ -182,7 +138,6 @@ const Builder = () => {
     setPublishing(true);
     
     try {
-      // Update subdomain if provided
       if (subdomain && subdomain !== website.subdomain) {
         const { error: subdomainError } = await supabase
           .from('websites')
@@ -192,7 +147,6 @@ const Builder = () => {
         if (subdomainError) throw subdomainError;
       }
       
-      // Publish the website
       const success = await publishWebsite(website.id);
       
       if (success) {
@@ -355,7 +309,6 @@ const Builder = () => {
                 ) : (
                   <div className="p-4 space-y-4">
                     <Button variant="ghost" className="w-full justify-start" onClick={() => {
-                      // Show SEO settings dialog
                       setSelectedComponent(null);
                     }}>
                       <Layout className="h-4 w-4 mr-2" />
