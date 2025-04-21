@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
@@ -211,14 +212,14 @@ export function Builder() {
                   Redo
                 </Button>
                 <Button onClick={saveWebsiteSettings}>Save</Button>
-                <Button variant="primary" onClick={onPublish}>
+                <Button variant="default" onClick={onPublish}>
                   Publish
                 </Button>
               </div>
             </div>
 
             <div className="flex h-full">
-              <BuilderSidebar setHistoryState={setHistoryState} />
+              <BuilderSidebar setHistoryState={setHistoryState} onSave={saveWebsiteSettings} />
               <DesignCanvas historyState={historyState} setHistoryState={setHistoryState} />
             </div>
           </div>

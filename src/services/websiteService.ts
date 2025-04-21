@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { WebsiteData } from '@/types/template';
@@ -20,6 +19,26 @@ export async function fetchUserWebsites(userId: string): Promise<WebsiteData[]> 
     console.error('Error fetching user websites:', error);
     toast.error('Failed to load websites');
     return [];
+  }
+}
+
+export async function fetchWebsiteById(id: string): Promise<WebsiteData | null> {
+  try {
+    const { data, error } = await supabase
+      .from('websites')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching website by ID:', error);
+    toast.error('Failed to load website');
+    return null;
   }
 }
 

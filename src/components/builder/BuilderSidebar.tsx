@@ -9,13 +9,70 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Layers, Type, Image, Box, Grid, Layout, Palette, Save, Eye, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { WebsiteSettings } from '@/types/website';
 
 interface BuilderSidebarProps {
-  onSave: () => void;
-  onPreview: () => void;
+  onSave?: () => void;
+  onPreview?: () => void;
+  setHistoryState?: any;
 }
 
-export function BuilderSidebar({ onSave, onPreview }: BuilderSidebarProps) {
+export function BuilderSidebar({ onSave, onPreview, setHistoryState }: BuilderSidebarProps) {
+  const handleSectionDrag = (sectionType: string) => {
+    if (setHistoryState) {
+      setHistoryState((prev: any) => {
+        const newContent = [...prev.present.content];
+        newContent.push({
+          id: `section-${Date.now()}`,
+          type: sectionType,
+          content: getDefaultContentForType(sectionType),
+          settings: getDefaultSettingsForType(sectionType),
+        });
+
+        return {
+          ...prev,
+          present: {
+            ...prev.present,
+            content: newContent,
+          }
+        };
+      });
+    }
+  };
+
+  const getDefaultContentForType = (sectionType: string) => {
+    switch(sectionType) {
+      case 'Hero':
+        return {
+          title: 'New Hero Section',
+          subtitle: 'Add your subtitle here',
+          buttonText: 'Call to Action',
+          buttonLink: '#',
+          image: 'https://via.placeholder.com/800x400',
+        };
+      case 'Features':
+        return {
+          title: 'Features',
+          subtitle: 'Our amazing features',
+          features: [
+            { title: 'Feature 1', description: 'Description 1', icon: 'Star' },
+            { title: 'Feature 2', description: 'Description 2', icon: 'Shield' },
+            { title: 'Feature 3', description: 'Description 3', icon: 'Heart' },
+          ],
+        };
+      default:
+        return {};
+    }
+  };
+
+  const getDefaultSettingsForType = (sectionType: string) => {
+    return {
+      backgroundColor: '#ffffff',
+      textColor: '#333333',
+      padding: '4rem',
+    };
+  };
+
   return (
     <div className="w-64 bg-background border-r border-border flex flex-col h-full">
       <div className="p-4 border-b border-border flex items-center justify-between">
@@ -83,7 +140,13 @@ export function BuilderSidebar({ onSave, onPreview }: BuilderSidebarProps) {
                   <AccordionContent>
                     <div className="grid grid-cols-1 gap-2">
                       {['Hero', 'Features', 'Gallery', 'Pricing', 'Team', 'Contact', 'FAQ'].map((section) => (
-                        <Button key={section} variant="outline" className="justify-start" size="sm">
+                        <Button 
+                          key={section} 
+                          variant="outline" 
+                          className="justify-start" 
+                          size="sm"
+                          onClick={() => handleSectionDrag(section)}
+                        >
                           {section}
                         </Button>
                       ))}
