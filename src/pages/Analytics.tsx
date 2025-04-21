@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -18,6 +17,7 @@ import { Loader2, Download, Calendar, ChartBar, Activity } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchUserWebsites } from '@/services/websiteService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { WebsiteAnalyticsTable } from '@/components/analytics/WebsiteAnalyticsTable';
 
 const MOCK_DATA = {
   pageViews: [
@@ -59,26 +59,22 @@ export function AnalyticsDashboard() {
   const [selectedWebsiteId, setSelectedWebsiteId] = useState<string>("");
   const [dateRange, setDateRange] = useState<string>("14d");
   
-  // Fetch user websites
   const { data: websites, isLoading: isLoadingWebsites } = useQuery({
     queryKey: ['websites', user?.id],
     queryFn: () => user ? fetchUserWebsites(user.id) : Promise.resolve([]),
     enabled: !!user,
   });
   
-  // Fetch analytics for selected website
   const { data: analytics, isLoading: isLoadingAnalytics } = useQuery({
     queryKey: ['website-analytics', selectedWebsiteId, dateRange],
     queryFn: () => fetchWebsiteAnalytics(selectedWebsiteId, dateRange),
     enabled: !!selectedWebsiteId,
   });
   
-  // Handle website selection
   const handleWebsiteChange = (websiteId: string) => {
     setSelectedWebsiteId(websiteId);
   };
   
-  // Statistics summary
   const getTotalPageViews = () => {
     return MOCK_DATA.pageViews.reduce((sum, item) => sum + item.views, 0);
   };
@@ -185,6 +181,19 @@ export function AnalyticsDashboard() {
                     icon={<ChartBar className="h-5 w-5" />} 
                   />
                 </div>
+
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle>Traffic Analytics</CardTitle>
+                    <CardDescription>Detailed website traffic statistics</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <WebsiteAnalyticsTable 
+                      data={analytics || []} 
+                      isLoading={isLoadingAnalytics} 
+                    />
+                  </CardContent>
+                </Card>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card>
