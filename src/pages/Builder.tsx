@@ -64,6 +64,35 @@ const Builder = () => {
     reset: resetHistory 
   } = useHistory<WebsiteSettings>(initialSettings);
   
+  const updateWebsiteSettings = (newSettings: Partial<WebsiteSettings>) => {
+    const updatedSettings = {
+      ...historyState.present,
+      ...newSettings
+    };
+    setHistory(updatedSettings);
+  };
+  
+  const handleUpdateComponent = (componentId: string, updates: any) => {
+    const currentContent = [...historyState.present.content];
+    const componentIndex = currentContent.findIndex(c => c.id === componentId);
+    
+    if (componentIndex !== -1) {
+      const updatedComponent = {
+        ...currentContent[componentIndex],
+        ...updates
+      };
+      
+      const newContent = [
+        ...currentContent.slice(0, componentIndex),
+        updatedComponent,
+        ...currentContent.slice(componentIndex + 1)
+      ];
+      
+      updateWebsiteSettings({ content: newContent });
+      setSelectedComponent(updatedComponent);
+    }
+  };
+  
   useEffect(() => {
     if (!user) {
       toast.error('You need to be logged in');
@@ -113,7 +142,7 @@ const Builder = () => {
           name: website.name,
           settings: {
             websiteSettings: historyState.present
-          } as Json,
+          },
           updated_at: new Date().toISOString()
         })
         .eq('id', website.id);
