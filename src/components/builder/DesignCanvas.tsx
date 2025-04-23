@@ -1,7 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { WebsiteSettings } from '@/types/website';
+import { ViewportSize, PreviewControls } from '@/components/builder/PreviewControls';
+import { Pencil, Trash } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface DesignCanvasProps {
   historyState: {
@@ -17,6 +20,28 @@ interface DesignCanvasProps {
 }
 
 export function DesignCanvas({ historyState, setHistoryState }: DesignCanvasProps) {
+  const [viewportSize, setViewportSize] = useState<ViewportSize>('desktop');
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+
+  const getViewportWidth = (): string => {
+    switch (viewportSize) {
+      case 'mobile': return 'w-[375px]';
+      case 'tablet': return 'w-[768px]';
+      case 'desktop': return 'w-full';
+      default: return 'w-full';
+    }
+  };
+
+  const handleSectionClick = (id: string) => {
+    setSelectedSectionId(id === selectedSectionId ? null : id);
+  };
+
+  const handleDeleteSection = (id: string) => {
+    const newContent = historyState.present.content.filter(section => section.id !== id);
+    const newPresent = { ...historyState.present, content: newContent };
+    setHistoryState({ present: newPresent });
+  };
+
   const renderContent = (section: any) => {
     switch(section.type) {
       case 'HeroSection':
@@ -58,21 +83,43 @@ export function DesignCanvas({ historyState, setHistoryState }: DesignCanvasProp
   return (
     <div className="flex-1 overflow-y-auto border-l border-border">
       <div className="p-4">
-        <div className="w-full bg-background border rounded-md shadow">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Preview</h2>
+          <PreviewControls 
+            viewportSize={viewportSize} 
+            onViewportChange={setViewportSize} 
+          />
+        </div>
+        
+        <div className={`mx-auto bg-background border rounded-md shadow transition-all ${getViewportWidth()}`}>
           <div className="relative">
             {historyState.present.content.map((section: any) => (
               <div 
                 key={section.id} 
-                className="relative border-2 border-transparent hover:border-primary focus:border-primary m-2 rounded-md"
+                className={`relative border-2 m-2 rounded-md transition-colors ${
+                  selectedSectionId === section.id ? 'border-primary' : 'border-transparent hover:border-primary/50'
+                }`}
+                onClick={() => handleSectionClick(section.id)}
               >
                 {renderContent(section)}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex space-x-1">
-                  <button className="p-1 bg-background border rounded-md text-xs">
-                    Edit
-                  </button>
-                  <button className="p-1 bg-background border rounded-md text-xs">
-                    Delete
-                  </button>
+                
+                <div className={`absolute top-2 right-2 flex space-x-1 ${
+                  selectedSectionId === section.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                }`}>
+                  <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSection(section.id);
+                    }}
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             ))}

@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useUndo } from 'use-undo';
+import useUndo from 'use-undo'; // Fixed import
 import { WebsiteSettings } from '@/types/website';
 import { DesignCanvas } from '@/components/builder/DesignCanvas';
 import { BuilderSidebar } from '@/components/builder/BuilderSidebar';
