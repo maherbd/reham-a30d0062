@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { WebsiteData } from '@/types/template';
@@ -146,6 +147,99 @@ export async function unpublishWebsite(websiteId: string): Promise<boolean> {
   } catch (error) {
     console.error('Error unpublishing website:', error);
     toast.error('Failed to unpublish website');
+    return false;
+  }
+}
+
+export async function updateSubdomain(websiteId: string, subdomain: string): Promise<boolean> {
+  try {
+    // Check if subdomain is available
+    const { data: existingData, error: checkError } = await supabase
+      .from('websites')
+      .select('id')
+      .eq('subdomain', subdomain)
+      .neq('id', websiteId)
+      .maybeSingle();
+    
+    if (checkError) throw checkError;
+    
+    if (existingData) {
+      toast.error('This subdomain is already taken');
+      return false;
+    }
+    
+    // Update the website with the new subdomain
+    const { error } = await supabase
+      .from('websites')
+      .update({ 
+        subdomain,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', websiteId);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating subdomain:', error);
+    toast.error('Failed to update subdomain');
+    return false;
+  }
+}
+
+export async function verifyCustomDomain(domain: string): Promise<{ verified: boolean; errors?: string[] }> {
+  try {
+    // In a real implementation, this would check DNS records
+    // For demo purposes, we'll simulate a verification process
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Mock verification logic (always succeeds for demo)
+    const isValid = /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i.test(domain);
+    
+    if (!isValid) {
+      return {
+        verified: false,
+        errors: ['Invalid domain format']
+      };
+    }
+    
+    return { verified: true };
+  } catch (error) {
+    console.error('Error verifying domain:', error);
+    return {
+      verified: false,
+      errors: ['Verification service unavailable']
+    };
+  }
+}
+
+export async function updateCustomDomain(websiteId: string, domain: string): Promise<boolean> {
+  try {
+    // First verify the domain
+    const verificationResult = await verifyCustomDomain(domain);
+    
+    if (!verificationResult.verified) {
+      toast.error('Domain verification failed');
+      return false;
+    }
+    
+    // Update the website with the new domain
+    const { error } = await supabase
+      .from('websites')
+      .update({ 
+        custom_domain: domain,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', websiteId);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating custom domain:', error);
+    toast.error('Failed to update custom domain');
     return false;
   }
 }

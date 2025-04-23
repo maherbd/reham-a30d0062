@@ -16,6 +16,11 @@ export interface WebsiteSettings {
     hotjarId?: string;
     customHeadCode?: string;
   };
+  domains?: {
+    subdomain?: string;
+    customDomain?: string;
+    domainVerified?: boolean;
+  };
 }
 
 export interface WebsiteContent {

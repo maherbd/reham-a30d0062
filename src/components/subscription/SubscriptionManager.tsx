@@ -25,7 +25,7 @@ export function SubscriptionManager({ currentPlan, subscriptionEnd, plans }: Sub
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   
   // Fetch user's transactions
-  const { data: transactions, isLoading: isLoadingTransactions } = useQuery<Transaction[]>({
+  const { data: transactions, isLoading: isLoadingTransactions } = useQuery({
     queryKey: ['transactions', user?.id],
     queryFn: () => user ? fetchUserTransactions(user.id) : Promise.resolve([]),
     enabled: !!user,

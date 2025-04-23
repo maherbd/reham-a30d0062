@@ -15,10 +15,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import useUndo from 'use-undo'; // Fixed import
 import { WebsiteSettings } from '@/types/website';
 import { DesignCanvas } from '@/components/builder/DesignCanvas';
 import { BuilderSidebar } from '@/components/builder/BuilderSidebar';
+import { useHistory } from '@/hooks/useHistory';
 
 export function Builder() {
   const { id } = useParams<{ id: string }>();
@@ -32,45 +32,44 @@ export function Builder() {
     enabled: !!id,
   });
 
+  const initialSettings: WebsiteSettings = {
+    content: [
+      {
+        id: 'hero',
+        type: 'HeroSection',
+        content: {
+          title: 'Your Awesome Headline',
+          subtitle: 'Describe your product or service in a concise way.',
+          image: 'https://via.placeholder.com/800x400',
+          buttonText: 'Learn More',
+          buttonLink: '/about',
+        },
+        settings: {
+          backgroundColor: '#f0f0f0',
+          textColor: '#333',
+        },
+      },
+    ],
+  };
+
+  const { 
+    state: historyState, 
+    canUndo, 
+    canRedo, 
+    undo, 
+    redo, 
+    set: setHistoryState
+  } = useHistory<WebsiteSettings>(initialSettings);
+
   useEffect(() => {
     if (website) {
       setWebsiteName(website.name);
       if (website.settings && website.settings.websiteSettings) {
-        const initialSettings = website.settings.websiteSettings as WebsiteSettings;
-        setHistoryState({
-          present: initialSettings,
-          past: [],
-          future: [],
-          group: null,
-          canUndo: false,
-          canRedo: false,
-          latestAction: null,
-        });
+        const websiteSettings = website.settings.websiteSettings as WebsiteSettings;
+        setHistoryState(websiteSettings);
       }
     }
-  }, [website]);
-
-  const [historyState, setHistoryState] = useUndo<WebsiteSettings>({
-    present: {
-      content: [
-        {
-          id: 'hero',
-          type: 'HeroSection',
-          content: {
-            title: 'Your Awesome Headline',
-            subtitle: 'Describe your product or service in a concise way.',
-            image: 'https://via.placeholder.com/800x400',
-            buttonText: 'Learn More',
-            buttonLink: '/about',
-          },
-          settings: {
-            backgroundColor: '#f0f0f0',
-            textColor: '#333',
-          },
-        },
-      ],
-    },
-  });
+  }, [website, setHistoryState]);
 
   const onPublish = async () => {
     if (!website) return;
@@ -98,7 +97,7 @@ export function Builder() {
         .update({
           name: website.name,
           settings: {
-            websiteSettings: JSON.parse(JSON.stringify(historyState.present))
+            websiteSettings: historyState.present
           },
           updated_at: new Date().toISOString()
         })
@@ -205,10 +204,10 @@ export function Builder() {
                 />
               </div>
               <div className="space-x-2">
-                <Button onClick={historyState.undo} disabled={!historyState.canUndo}>
+                <Button onClick={undo} disabled={!canUndo}>
                   Undo
                 </Button>
-                <Button onClick={historyState.redo} disabled={!historyState.canRedo}>
+                <Button onClick={redo} disabled={!canRedo}>
                   Redo
                 </Button>
                 <Button onClick={saveWebsiteSettings}>Save</Button>

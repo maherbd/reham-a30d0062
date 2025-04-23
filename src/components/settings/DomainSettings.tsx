@@ -35,7 +35,7 @@ export function DomainSettings({
   const [customDomain, setCustomDomain] = useState(currentCustomDomain || '');
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [domainStatus, setDomainStatus] = useState<{verified: boolean; errors?: string[]}>(); 
+  const [domainStatus, setDomainStatus] = useState<{verified: boolean; errors?: string[]}>();
 
   const handleUpdateSubdomain = async () => {
     if (!subdomain) {
