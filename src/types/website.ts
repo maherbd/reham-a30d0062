@@ -21,6 +21,7 @@ export interface WebsiteSettings {
     customDomain?: string;
     domainVerified?: boolean;
   };
+  [key: string]: any; // Add index signature to allow for JSON serialization
 }
 
 export interface WebsiteContent {

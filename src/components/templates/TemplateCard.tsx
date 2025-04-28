@@ -32,6 +32,11 @@ export function TemplateCard({ template, showPreview = true }: TemplateCardProps
     setIsPreviewOpen(false);
   };
 
+  // Format the category name for display
+  const formatCategory = (category: string) => {
+    return category.charAt(0).toUpperCase() + category.slice(1);
+  };
+
   return (
     <>
       <div className="template-card group relative overflow-hidden rounded-xl shadow-card bg-card">
@@ -60,11 +65,21 @@ export function TemplateCard({ template, showPreview = true }: TemplateCardProps
         </div>
         <div className="p-6">
           <div className="flex flex-wrap gap-2 mb-3">
-            {tags.map((tag) => (
+            {template.category && (
+              <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                {formatCategory(template.category)}
+              </span>
+            )}
+            {tags.slice(0, 2).map((tag) => (
               <span key={tag} className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
                 {tag}
               </span>
             ))}
+            {tags.length > 2 && (
+              <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                +{tags.length - 2} more
+              </span>
+            )}
             {template.is_premium && (
               <Badge variant="outline" className="ml-auto bg-amber-500/20 text-amber-500">
                 <Lock className="mr-1 h-3 w-3" />

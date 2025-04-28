@@ -5,7 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ import { WebsiteSettings } from '@/types/website';
 import { DesignCanvas } from '@/components/builder/DesignCanvas';
 import { BuilderSidebar } from '@/components/builder/BuilderSidebar';
 import { useHistory } from '@/hooks/useHistory';
+import { UndoRedoControls } from '@/components/builder/UndoRedoControls';
 
 export function Builder() {
   const { id } = useParams<{ id: string }>();
@@ -58,7 +59,8 @@ export function Builder() {
     canRedo, 
     undo, 
     redo, 
-    set: setHistoryState
+    set: setHistoryState,
+    reset: resetHistoryState
   } = useHistory<WebsiteSettings>(initialSettings);
 
   useEffect(() => {
@@ -66,10 +68,10 @@ export function Builder() {
       setWebsiteName(website.name);
       if (website.settings && website.settings.websiteSettings) {
         const websiteSettings = website.settings.websiteSettings as WebsiteSettings;
-        setHistoryState(websiteSettings);
+        resetHistoryState(websiteSettings);
       }
     }
-  }, [website, setHistoryState]);
+  }, [website, resetHistoryState]);
 
   const onPublish = async () => {
     if (!website) return;
@@ -92,13 +94,16 @@ export function Builder() {
     try {
       if (!website) return;
       
+      // Convert the WebsiteSettings object to a plain object that can be stored as JSON
+      const settings = {
+        websiteSettings: JSON.parse(JSON.stringify(historyState.present))
+      };
+      
       const { error } = await supabase
         .from('websites')
         .update({
-          name: website.name,
-          settings: {
-            websiteSettings: historyState.present
-          },
+          name: websiteName,
+          settings: settings,
           updated_at: new Date().toISOString()
         })
         .eq('id', website.id);
@@ -203,23 +208,31 @@ export function Builder() {
                   className="text-2xl font-bold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-transparent"
                 />
               </div>
-              <div className="space-x-2">
-                <Button onClick={undo} disabled={!canUndo}>
-                  Undo
-                </Button>
-                <Button onClick={redo} disabled={!canRedo}>
-                  Redo
-                </Button>
-                <Button onClick={saveWebsiteSettings}>Save</Button>
-                <Button variant="default" onClick={onPublish}>
-                  Publish
-                </Button>
+              <div className="flex items-center space-x-2">
+                <UndoRedoControls 
+                  canUndo={canUndo} 
+                  canRedo={canRedo}
+                  onUndo={undo}
+                  onRedo={redo}
+                />
+                <div className="space-x-2">
+                  <Button onClick={saveWebsiteSettings}>Save</Button>
+                  <Button variant="default" onClick={onPublish}>
+                    Publish
+                  </Button>
+                </div>
               </div>
             </div>
 
             <div className="flex h-full">
-              <BuilderSidebar setHistoryState={setHistoryState} onSave={saveWebsiteSettings} />
-              <DesignCanvas historyState={historyState} setHistoryState={setHistoryState} />
+              <BuilderSidebar 
+                setHistoryState={(newState: WebsiteSettings) => setHistoryState(newState)} 
+                onSave={saveWebsiteSettings} 
+              />
+              <DesignCanvas 
+                historyState={historyState} 
+                setHistoryState={setHistoryState}
+              />
             </div>
           </div>
         </main>

@@ -33,3 +33,7 @@ enabled = true
 [functions]
 [functions.payment-webhook]
 verify_jwt = false
+
+[functions.subscription-webhook]
+verify_jwt = false
+

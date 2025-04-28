@@ -1,27 +1,22 @@
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { WebsiteSettings } from '@/types/website';
+import { WebsiteSettings, WebsiteContent } from '@/types/website';
 import { ViewportSize, PreviewControls } from '@/components/builder/PreviewControls';
 import { Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ComponentConfigPanel } from '@/components/builder/ComponentConfigPanel';
+import { HistoryState } from '@/hooks/useHistory';
 
 interface DesignCanvasProps {
-  historyState: {
-    present: WebsiteSettings;
-    past: WebsiteSettings[];
-    future: WebsiteSettings[];
-    canUndo: boolean;
-    canRedo: boolean;
-    undo: () => void;
-    redo: () => void;
-  };
-  setHistoryState: any;
+  historyState: HistoryState<WebsiteSettings>;
+  setHistoryState: (newState: WebsiteSettings) => void;
 }
 
 export function DesignCanvas({ historyState, setHistoryState }: DesignCanvasProps) {
   const [viewportSize, setViewportSize] = useState<ViewportSize>('desktop');
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
 
   const getViewportWidth = (): string => {
     switch (viewportSize) {
@@ -36,10 +31,27 @@ export function DesignCanvas({ historyState, setHistoryState }: DesignCanvasProp
     setSelectedSectionId(id === selectedSectionId ? null : id);
   };
 
+  const handleEditSection = (id: string) => {
+    setSelectedSectionId(id);
+    setIsConfigPanelOpen(true);
+  };
+
   const handleDeleteSection = (id: string) => {
     const newContent = historyState.present.content.filter(section => section.id !== id);
     const newPresent = { ...historyState.present, content: newContent };
-    setHistoryState({ present: newPresent });
+    setHistoryState(newPresent);
+  };
+
+  const handleUpdateComponent = (updatedComponent: WebsiteContent) => {
+    const newContent = historyState.present.content.map(section => 
+      section.id === updatedComponent.id ? updatedComponent : section
+    );
+    const newPresent = { ...historyState.present, content: newContent };
+    setHistoryState(newPresent);
+  };
+
+  const closeConfigPanel = () => {
+    setIsConfigPanelOpen(false);
   };
 
   const renderContent = (section: any) => {
@@ -80,6 +92,10 @@ export function DesignCanvas({ historyState, setHistoryState }: DesignCanvasProp
     }
   };
 
+  const selectedSection = selectedSectionId 
+    ? historyState.present.content.find(s => s.id === selectedSectionId) 
+    : null;
+
   return (
     <div className="flex-1 overflow-y-auto border-l border-border">
       <div className="p-4">
@@ -106,7 +122,15 @@ export function DesignCanvas({ historyState, setHistoryState }: DesignCanvasProp
                 <div className={`absolute top-2 right-2 flex space-x-1 ${
                   selectedSectionId === section.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                 }`}>
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 w-8 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditSection(section.id);
+                    }}
+                  >
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button 
@@ -126,6 +150,18 @@ export function DesignCanvas({ historyState, setHistoryState }: DesignCanvasProp
           </div>
         </div>
       </div>
+
+      {isConfigPanelOpen && selectedSection && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <ComponentConfigPanel
+              component={selectedSection}
+              onUpdate={handleUpdateComponent}
+              onClose={closeConfigPanel}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

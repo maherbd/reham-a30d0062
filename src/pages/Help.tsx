@@ -1,308 +1,126 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { FadeIn } from '@/components/transitions/FadeIn';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Search, 
-  HelpCircle, 
-  Book, 
-  FileText, 
-  Video, 
-  MessageCircle, 
-  ExternalLink
-} from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger 
+} from '@/components/ui/accordion';
+import { FadeIn, FadeInStagger } from '@/components/transitions/FadeIn';
+import { Search, FileText, HelpCircle, BookOpen, Zap, Code, Users, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const Help = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Filter help articles based on search query
+  const filterArticles = (articles: HelpArticle[]) => {
+    if (!searchQuery) return articles;
+    
+    return articles.filter(article => 
+      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.content.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow py-16 bg-muted/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow mt-16 py-12">
+        <div className="container mx-auto px-4">
           <FadeIn>
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold mb-4">Help Center</h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Find answers to frequently asked questions and learn how to make the most of our platform.
+            <div className="max-w-3xl mx-auto text-center mb-12">
+              <h1 className="text-4xl font-bold mb-4">How can we help you?</h1>
+              <p className="text-xl text-muted-foreground mb-8">
+                Find answers to common questions or browse our documentation
               </p>
-              
-              <div className="relative max-w-lg mx-auto mt-8">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <div className="relative max-w-xl mx-auto">
+                <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <Input
-                  placeholder="Search documentation..."
-                  className="pl-10"
+                  type="text"
+                  placeholder="Search help articles..."
+                  className="pl-10 h-12"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
             </div>
+          </FadeIn>
+
+          <Tabs defaultValue="getting-started" className="max-w-4xl mx-auto">
+            <TabsList className="grid grid-cols-4 mb-8">
+              <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
+              <TabsTrigger value="templates">Templates</TabsTrigger>
+              <TabsTrigger value="builder">Website Builder</TabsTrigger>
+              <TabsTrigger value="faq">FAQs</TabsTrigger>
+            </TabsList>
             
-            <Tabs defaultValue="guides" className="space-y-8">
-              <TabsList className="w-full flex justify-center border-b bg-transparent h-auto p-0">
-                <div className="flex flex-wrap justify-center">
-                  <TabsTrigger 
-                    value="guides"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-6 py-3 bg-transparent"
-                  >
-                    Getting Started
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="faqs"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-6 py-3 bg-transparent"
-                  >
-                    FAQs
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="videos"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-6 py-3 bg-transparent"
-                  >
-                    Video Tutorials
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="support"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-6 py-3 bg-transparent"
-                  >
-                    Contact Support
-                  </TabsTrigger>
-                </div>
-              </TabsList>
-              
-              <TabsContent value="guides" className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Book className="h-5 w-5 text-primary" />
-                        Creating Your First Website
-                      </CardTitle>
-                      <CardDescription>
-                        Learn how to create and customize your first website using our platform.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2">
-                        <li className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <a href="#" className="text-primary hover:underline">Choosing a Template</a>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <a href="#" className="text-primary hover:underline">Adding Custom Sections</a>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <a href="#" className="text-primary hover:underline">Publishing Your Website</a>
-                        </li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Book className="h-5 w-5 text-primary" />
-                        Domain Setup
-                      </CardTitle>
-                      <CardDescription>
-                        Configure custom domains and create professional web addresses.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2">
-                        <li className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <a href="#" className="text-primary hover:underline">Using a Free Subdomain</a>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <a href="#" className="text-primary hover:underline">Connecting a Custom Domain</a>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <a href="#" className="text-primary hover:underline">DNS Configuration</a>
-                        </li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Book className="h-5 w-5 text-primary" />
-                        Analytics & SEO
-                      </CardTitle>
-                      <CardDescription>
-                        Optimize your website and track visitor engagement.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2">
-                        <li className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <a href="#" className="text-primary hover:underline">Setting Up Google Analytics</a>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <a href="#" className="text-primary hover:underline">SEO Best Practices</a>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <a href="#" className="text-primary hover:underline">Understanding Traffic Reports</a>
-                        </li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="faqs" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Frequently Asked Questions</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                      <h3 className="font-medium flex items-center gap-2">
-                        <HelpCircle className="h-4 w-4 text-primary" />
-                        How do I update my subscription plan?
-                      </h3>
-                      <p className="text-muted-foreground pl-6">
-                        You can update your subscription plan by visiting the Subscription Management page from your Dashboard.
-                        Select the plan you want to upgrade or downgrade to and follow the checkout process.
-                      </p>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="space-y-2">
-                      <h3 className="font-medium flex items-center gap-2">
-                        <HelpCircle className="h-4 w-4 text-primary" />
-                        Can I transfer my website to another account?
-                      </h3>
-                      <p className="text-muted-foreground pl-6">
-                        Currently, websites cannot be transferred between accounts. We recommend exporting your content
-                        and recreating the website on the destination account if needed.
-                      </p>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="space-y-2">
-                      <h3 className="font-medium flex items-center gap-2">
-                        <HelpCircle className="h-4 w-4 text-primary" />
-                        How do I add Google Analytics to my website?
-                      </h3>
-                      <p className="text-muted-foreground pl-6">
-                        You can add your Google Analytics tracking ID in the Website Settings under the Analytics tab.
-                        Simply paste your Google Analytics tracking ID (starts with G-) and save your changes.
-                      </p>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="space-y-2">
-                      <h3 className="font-medium flex items-center gap-2">
-                        <HelpCircle className="h-4 w-4 text-primary" />
-                        What payment methods do you accept?
-                      </h3>
-                      <p className="text-muted-foreground pl-6">
-                        We accept credit/debit cards, PayPal, and several cryptocurrencies including USDC, SOL, and ETH.
-                        All payments are processed securely through our payment processors.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="videos" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <Card className="overflow-hidden">
-                    <div className="aspect-video bg-muted flex items-center justify-center">
-                      <Video className="h-12 w-12 text-muted-foreground" />
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="text-base">Getting Started Tutorial</CardTitle>
-                      <CardDescription>Learn the basics in under 10 minutes</CardDescription>
-                    </CardHeader>
-                  </Card>
-                  
-                  <Card className="overflow-hidden">
-                    <div className="aspect-video bg-muted flex items-center justify-center">
-                      <Video className="h-12 w-12 text-muted-foreground" />
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="text-base">Custom Domain Setup</CardTitle>
-                      <CardDescription>Connect your domain step-by-step</CardDescription>
-                    </CardHeader>
-                  </Card>
-                  
-                  <Card className="overflow-hidden">
-                    <div className="aspect-video bg-muted flex items-center justify-center">
-                      <Video className="h-12 w-12 text-muted-foreground" />
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="text-base">Advanced Template Customization</CardTitle>
-                      <CardDescription>Make your website unique</CardDescription>
-                    </CardHeader>
-                  </Card>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="support" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Contact Our Support Team</CardTitle>
-                    <CardDescription>
-                      We're here to help! Choose the best way to reach us.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-6">
-                    <div className="grid gap-4">
-                      <div className="flex items-start gap-4 rounded-lg border p-4">
-                        <MessageCircle className="h-6 w-6 text-primary" />
-                        <div className="space-y-2">
-                          <h3 className="font-medium">Live Chat Support</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Chat with our support team in real-time during business hours.
-                          </p>
-                          <button className="text-primary font-medium text-sm flex items-center gap-1">
-                            Start Chat <ExternalLink className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start gap-4 rounded-lg border p-4">
-                        <FileText className="h-6 w-6 text-primary" />
-                        <div className="space-y-2">
-                          <h3 className="font-medium">Submit a Support Ticket</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Create a support ticket for complex issues that require investigation.
-                          </p>
-                          <button className="text-primary font-medium text-sm flex items-center gap-1">
-                            Create Ticket <ExternalLink className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start gap-4 rounded-lg border p-4">
-                        <Video className="h-6 w-6 text-primary" />
-                        <div className="space-y-2">
-                          <h3 className="font-medium">Schedule a Demo</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Book a 30-minute call with our team to walk through advanced features.
-                          </p>
-                          <button className="text-primary font-medium text-sm flex items-center gap-1">
-                            Book Demo <ExternalLink className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+            <TabsContent value="getting-started">
+              <FadeInStagger className="grid gap-6" staggerDelay={100}>
+                {filterArticles(gettingStartedArticles).map((article, index) => (
+                  <HelpArticleCard key={index} article={article} />
+                ))}
+              </FadeInStagger>
+            </TabsContent>
+            
+            <TabsContent value="templates">
+              <FadeInStagger className="grid gap-6" staggerDelay={100}>
+                {filterArticles(templateArticles).map((article, index) => (
+                  <HelpArticleCard key={index} article={article} />
+                ))}
+              </FadeInStagger>
+            </TabsContent>
+            
+            <TabsContent value="builder">
+              <FadeInStagger className="grid gap-6" staggerDelay={100}>
+                {filterArticles(builderArticles).map((article, index) => (
+                  <HelpArticleCard key={index} article={article} />
+                ))}
+              </FadeInStagger>
+            </TabsContent>
+            
+            <TabsContent value="faq">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Frequently Asked Questions</CardTitle>
+                  <CardDescription>
+                    Quick answers to common questions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Accordion type="single" collapsible className="w-full">
+                    {filterArticles(faqArticles).map((faq, index) => (
+                      <AccordionItem key={index} value={`faq-${index}`}>
+                        <AccordionTrigger>{faq.title}</AccordionTrigger>
+                        <AccordionContent>
+                          <div dangerouslySetInnerHTML={{ __html: faq.content }} />
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+          
+          <FadeIn delay={300}>
+            <div className="max-w-4xl mx-auto mt-16 bg-secondary/30 rounded-lg p-8 flex flex-col sm:flex-row items-center justify-between">
+              <div className="mb-6 sm:mb-0 sm:mr-6">
+                <h2 className="text-2xl font-semibold mb-2">Still need help?</h2>
+                <p className="text-muted-foreground">
+                  Reach out to our support team and we'll get back to you as soon as possible.
+                </p>
+              </div>
+              <Button asChild>
+                <Link to="/contact">Contact Support</Link>
+              </Button>
+            </div>
           </FadeIn>
         </div>
       </main>
@@ -310,5 +128,131 @@ const Help = () => {
     </div>
   );
 };
+
+interface HelpArticle {
+  title: string;
+  excerpt: string;
+  content: string;
+  icon: React.ReactNode;
+}
+
+const HelpArticleCard = ({ article }: { article: HelpArticle }) => (
+  <FadeIn>
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="flex flex-row items-start space-x-4">
+        <div className="bg-primary/10 p-2 rounded-lg">
+          {article.icon}
+        </div>
+        <div>
+          <CardTitle>{article.title}</CardTitle>
+          <CardDescription className="mt-2">{article.excerpt}</CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: article.content }} />
+        <Button variant="link" className="p-0 mt-2 h-auto flex items-center">
+          <span>Read more</span>
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </CardContent>
+    </Card>
+  </FadeIn>
+);
+
+const gettingStartedArticles: HelpArticle[] = [
+  {
+    title: "Creating your first website",
+    excerpt: "A step-by-step guide to creating your first Web3 website",
+    content: "Learn how to create your first website using our platform. This guide walks you through selecting a template, customizing it, and publishing your site online. Perfect for beginners who are just getting started with Web3 websites.",
+    icon: <FileText className="h-6 w-6 text-primary" />
+  },
+  {
+    title: "Understanding Web3 Integration",
+    excerpt: "Learn about connecting wallets and blockchain functionality",
+    content: "This guide explains how our platform integrates with Web3 technologies like wallet connections, smart contracts, and blockchain data. Understanding these concepts will help you make the most of your Web3 website.",
+    icon: <Zap className="h-6 w-6 text-primary" />
+  },
+  {
+    title: "Account Setup",
+    excerpt: "How to set up and manage your account",
+    content: "Learn how to create an account, set up your profile, and manage your account settings. This guide covers everything from registration to security settings and notification preferences.",
+    icon: <Users className="h-6 w-6 text-primary" />
+  }
+];
+
+const templateArticles: HelpArticle[] = [
+  {
+    title: "Choosing the Right Template",
+    excerpt: "Tips for selecting the perfect template for your needs",
+    content: "Not all templates are created equal. This guide helps you understand the different template categories, features, and use cases so you can choose the template that best fits your project needs.",
+    icon: <BookOpen className="h-6 w-6 text-primary" />
+  },
+  {
+    title: "Customizing Templates",
+    excerpt: "How to personalize your template without coding",
+    content: "Our templates are fully customizable without requiring coding knowledge. Learn how to change colors, fonts, layouts, and content to create a unique website that matches your brand identity.",
+    icon: <Code className="h-6 w-6 text-primary" />
+  },
+  {
+    title: "Template Categories Explained",
+    excerpt: "Understanding different template categories and their purposes",
+    content: "We offer templates for various Web3 use cases including meme coins, NFTs, DAOs, DeFi, GameFi, and social platforms. This guide explains the features specific to each category and how to make the most of them.",
+    icon: <HelpCircle className="h-6 w-6 text-primary" />
+  }
+];
+
+const builderArticles: HelpArticle[] = [
+  {
+    title: "Website Builder Basics",
+    excerpt: "Learn about the core features of our website builder",
+    content: "Our drag-and-drop website builder makes it easy to create and customize your Web3 website. This guide covers the basic functionality including the component library, layout tools, and preview options.",
+    icon: <Code className="h-6 w-6 text-primary" />
+  },
+  {
+    title: "Adding and Configuring Components",
+    excerpt: "How to add and customize components on your website",
+    content: "Components are the building blocks of your website. This guide shows you how to add components from the library, arrange them on your pages, and configure their properties to achieve the exact look and functionality you want.",
+    icon: <Zap className="h-6 w-6 text-primary" />
+  },
+  {
+    title: "Publishing Your Website",
+    excerpt: "Steps to publish your website and make it live",
+    content: "When your website is ready to go live, follow this guide to publish it. Learn about our publishing process, domain options, and how to update your site after it's been published.",
+    icon: <FileText className="h-6 w-6 text-primary" />
+  }
+];
+
+const faqArticles: HelpArticle[] = [
+  {
+    title: "What is a custom domain and how do I set it up?",
+    excerpt: "",
+    content: "A custom domain allows you to use your own domain name (like <strong>yourbrand.com</strong>) for your website instead of our default subdomain. To set up a custom domain, go to your website settings, click on 'Domain Settings', and follow the instructions to connect your domain. You'll need to update your DNS records with your domain registrar.",
+    icon: <HelpCircle className="h-6 w-6 text-primary" />
+  },
+  {
+    title: "How do I connect a Web3 wallet to my website?",
+    excerpt: "",
+    content: "Our platform includes built-in components for connecting popular Web3 wallets like MetaMask, Phantom, and WalletConnect. Simply add a 'Connect Wallet' component to your website from the component library, and configure it according to the blockchains you want to support.",
+    icon: <HelpCircle className="h-6 w-6 text-primary" />
+  },
+  {
+    title: "Can I transfer my website to another platform?",
+    excerpt: "",
+    content: "Yes, you can export your website's code and assets at any time by going to Settings > Export. This will provide you with a zip file containing your website's HTML, CSS, JavaScript, and other assets that you can deploy to any hosting provider.",
+    icon: <HelpCircle className="h-6 w-6 text-primary" />
+  },
+  {
+    title: "How do I track visitor analytics for my website?",
+    excerpt: "",
+    content: "Our platform includes built-in analytics that track key metrics like page views, unique visitors, and engagement. To access your analytics, go to your dashboard and click on the 'Analytics' tab for the website you want to monitor. You can also integrate with third-party analytics services like Google Analytics.",
+    icon: <HelpCircle className="h-6 w-6 text-primary" />
+  },
+  {
+    title: "What payment methods do you accept?",
+    excerpt: "",
+    content: "We accept payments through various cryptocurrency wallets supporting Solana (SOL) and USDC. You can pay using connected wallets like Phantom or Solflare. We also support traditional payment methods through partners on our premium plans.",
+    icon: <HelpCircle className="h-6 w-6 text-primary" />
+  }
+];
 
 export default Help;

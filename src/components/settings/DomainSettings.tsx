@@ -1,285 +1,352 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { 
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Link, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { CheckCircle, AlertCircle, Copy, ExternalLink } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { WebsiteData } from '@/types/template';
 
 interface DomainSettingsProps {
-  websiteId: string;
-  currentSubdomain?: string | null;
-  currentCustomDomain?: string | null;
-  onUpdateSubdomain: (subdomain: string) => Promise<boolean>;
-  onUpdateCustomDomain: (domain: string) => Promise<boolean>;
-  onVerifyDomain: (domain: string) => Promise<{verified: boolean; errors?: string[]}>;
+  website: WebsiteData;
+  onUpdate: () => void;
 }
 
-export function DomainSettings({ 
-  websiteId, 
-  currentSubdomain, 
-  currentCustomDomain,
-  onUpdateSubdomain,
-  onUpdateCustomDomain,
-  onVerifyDomain
-}: DomainSettingsProps) {
-  const [subdomain, setSubdomain] = useState(currentSubdomain || '');
-  const [customDomain, setCustomDomain] = useState(currentCustomDomain || '');
-  const [loading, setLoading] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [domainStatus, setDomainStatus] = useState<{verified: boolean; errors?: string[]}>();
+export function DomainSettings({ website, onUpdate }: DomainSettingsProps) {
+  const [subdomain, setSubdomain] = useState(website.subdomain || '');
+  const [customDomain, setCustomDomain] = useState(website.custom_domain || '');
+  const [isVerified, setIsVerified] = useState(
+    website.settings?.domainVerified || false
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleUpdateSubdomain = async () => {
-    if (!subdomain) {
-      toast.error('Please enter a subdomain');
+  const baseSubdomain = 'lovable.app';
+  
+  useEffect(() => {
+    setSubdomain(website.subdomain || '');
+    setCustomDomain(website.custom_domain || '');
+    setIsVerified(website.settings?.domainVerified || false);
+  }, [website]);
+
+  const updateSubdomain = async () => {
+    if (!subdomain.trim()) {
+      toast.error('Subdomain cannot be empty');
       return;
     }
-
-    setLoading(true);
+    
+    // Simple validation for subdomain format
+    const subdomainRegex = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+    if (!subdomainRegex.test(subdomain)) {
+      toast.error('Invalid subdomain format');
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      const success = await onUpdateSubdomain(subdomain);
-      if (success) {
-        toast.success('Subdomain updated successfully');
+      // Check if subdomain is already in use
+      const { data, error: checkError } = await supabase
+        .from('websites')
+        .select('id')
+        .eq('subdomain', subdomain)
+        .neq('id', website.id);
+      
+      if (checkError) {
+        throw checkError;
       }
+      
+      if (data && data.length > 0) {
+        toast.error('This subdomain is already in use');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Update the subdomain
+      const { error: updateError } = await supabase
+        .from('websites')
+        .update({ subdomain })
+        .eq('id', website.id);
+      
+      if (updateError) {
+        throw updateError;
+      }
+      
+      toast.success('Subdomain updated successfully');
+      onUpdate();
+      
     } catch (error) {
       console.error('Error updating subdomain:', error);
       toast.error('Failed to update subdomain');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleVerifyDomain = async () => {
-    if (!customDomain) {
-      toast.error('Please enter a custom domain');
+  const updateCustomDomain = async () => {
+    if (!customDomain.trim()) {
+      toast.error('Domain cannot be empty');
       return;
     }
-
-    setVerifying(true);
+    
+    // Simple validation for domain format
+    const domainRegex = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/;
+    if (!domainRegex.test(customDomain)) {
+      toast.error('Invalid domain format');
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      const result = await onVerifyDomain(customDomain);
-      setDomainStatus(result);
+      // Check if domain is already in use
+      const { data, error: checkError } = await supabase
+        .from('websites')
+        .select('id')
+        .eq('custom_domain', customDomain)
+        .neq('id', website.id);
       
-      if (result.verified) {
-        toast.success('Domain verified successfully');
-      } else {
-        toast.error('Domain verification failed');
+      if (checkError) {
+        throw checkError;
       }
-    } catch (error) {
-      console.error('Error verifying domain:', error);
-      toast.error('Failed to verify domain');
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  const handleUpdateCustomDomain = async () => {
-    if (!customDomain) {
-      toast.error('Please enter a custom domain');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const success = await onUpdateCustomDomain(customDomain);
-      if (success) {
-        toast.success('Custom domain updated successfully');
+      
+      if (data && data.length > 0) {
+        toast.error('This domain is already in use');
+        setIsLoading(false);
+        return;
       }
+      
+      // Update the domain and reset verification status
+      const { error: updateError } = await supabase
+        .from('websites')
+        .update({ 
+          custom_domain: customDomain,
+          settings: {
+            ...website.settings,
+            domainVerified: false
+          }
+        })
+        .eq('id', website.id);
+      
+      if (updateError) {
+        throw updateError;
+      }
+      
+      setIsVerified(false);
+      toast.success('Custom domain updated successfully');
+      toast('Domain verification required', {
+        description: 'Please verify your domain by adding the required DNS records',
+      });
+      onUpdate();
+      
     } catch (error) {
       console.error('Error updating custom domain:', error);
       toast.error('Failed to update custom domain');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  const verifyDomain = async () => {
+    setIsVerifying(true);
+    
+    try {
+      // This would typically involve checking DNS records to verify ownership
+      // For demo purposes, we'll simulate a verification process
+      
+      // Simulate verification check
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Update verification status
+      const { error } = await supabase
+        .from('websites')
+        .update({ 
+          settings: {
+            ...website.settings,
+            domainVerified: true
+          }
+        })
+        .eq('id', website.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      setIsVerified(true);
+      toast.success('Domain verified successfully');
+      onUpdate();
+      
+    } catch (error) {
+      console.error('Error verifying domain:', error);
+      toast.error('Failed to verify domain');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const copyDnsRecords = () => {
+    navigator.clipboard.writeText(`
+Type: CNAME
+Name: @
+Value: custom.lovable.app
+TTL: Automatic
+    `);
+    toast.success('DNS records copied to clipboard');
+  };
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2">
-          <Link className="h-5 w-5" /> 
-          Domain Settings
-        </CardTitle>
-        <CardDescription>
-          Configure how users access your website.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="font-medium">Free Subdomain</h3>
-            {currentSubdomain && (
-              <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
-                Active
-              </Badge>
-            )}
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Input
-              value={subdomain}
-              onChange={(e) => setSubdomain(e.target.value)}
-              placeholder="your-site"
-              className="flex-grow"
-            />
-            <span className="text-muted-foreground whitespace-nowrap">.lovable.app</span>
-          </div>
-          
-          <Button 
-            onClick={handleUpdateSubdomain}
-            disabled={loading || !subdomain}
-            className="w-full"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Updating...
-              </>
-            ) : (
-              'Update Subdomain'
-            )}
-          </Button>
-          
-          {currentSubdomain && (
-            <div className="mt-2 flex items-center justify-between p-2 bg-muted rounded-md">
-              <span className="text-sm">Current URL:</span>
-              <a
-                href={`https://${currentSubdomain}.lovable.app`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:underline flex items-center"
-              >
-                {`${currentSubdomain}.lovable.app`}
-                <Link className="h-3 w-3 ml-1" />
-              </a>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Subdomain Settings</CardTitle>
+          <CardDescription>
+            Set a custom subdomain for your website on our platform
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="subdomain">Subdomain</Label>
+              <div className="flex items-center">
+                <Input
+                  id="subdomain"
+                  placeholder="yoursite"
+                  value={subdomain}
+                  onChange={(e) => setSubdomain(e.target.value)}
+                  className="rounded-r-none"
+                />
+                <div className="bg-muted flex items-center px-3 h-10 rounded-r-md border border-l-0">
+                  .{baseSubdomain}
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-        
-        <Separator />
-        
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="font-medium">Custom Domain</h3>
-            {currentCustomDomain && (
-              <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
-                Connected
-              </Badge>
+            {subdomain && (
+              <p className="text-sm text-muted-foreground">
+                Your site will be available at:{' '}
+                <a 
+                  href={`https://${subdomain}.${baseSubdomain}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  {subdomain}.{baseSubdomain}
+                </a>
+              </p>
+            )}
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button 
+            onClick={updateSubdomain} 
+            disabled={isLoading || !subdomain}
+          >
+            Update Subdomain
+          </Button>
+        </CardFooter>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Custom Domain Settings</CardTitle>
+          <CardDescription>
+            Connect your own domain to your website
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="domain">Custom Domain</Label>
+              <div className="flex items-center">
+                <Input
+                  id="domain"
+                  placeholder="yourdomain.com"
+                  value={customDomain}
+                  onChange={(e) => setCustomDomain(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            {customDomain && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm">Status:</span>
+                {isVerified ? (
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                    Verified
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                    <AlertCircle className="h-3.5 w-3.5 mr-1" />
+                    Not Verified
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="custom-domain">Domain Name</Label>
-            <Input
-              id="custom-domain"
-              value={customDomain}
-              onChange={(e) => setCustomDomain(e.target.value)}
-              placeholder="www.yourdomain.com"
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2">
-            <Button 
-              variant="outline"
-              onClick={handleVerifyDomain}
-              disabled={verifying || !customDomain}
-            >
-              {verifying ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                'Verify Domain'
-              )}
-            </Button>
-            
-            <Button 
-              onClick={handleUpdateCustomDomain}
-              disabled={loading || !customDomain || (domainStatus && !domainStatus.verified)}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                'Connect Domain'
-              )}
-            </Button>
-          </div>
-          
-          {domainStatus && (
-            <Alert variant={domainStatus.verified ? "default" : "destructive"}>
-              {domainStatus.verified ? (
-                <>
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertTitle>Domain Verified</AlertTitle>
-                  <AlertDescription>
-                    Your domain has been verified successfully.
-                  </AlertDescription>
-                </>
-              ) : (
-                <>
-                  <XCircle className="h-4 w-4" />
-                  <AlertTitle>Verification Failed</AlertTitle>
-                  <AlertDescription>
-                    <p>Please check the following:</p>
-                    <ul className="list-disc pl-4 mt-2">
-                      {domainStatus.errors?.map((error, i) => (
-                        <li key={i}>{error}</li>
-                      )) || (
-                        <li>There was a problem verifying your domain. Please check your DNS settings.</li>
-                      )}
-                    </ul>
-                  </AlertDescription>
-                </>
-              )}
+          {customDomain && !isVerified && (
+            <Alert variant="warning">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Domain Verification Required</AlertTitle>
+              <AlertDescription>
+                <p className="mb-4">
+                  Please add the following DNS records to your domain provider to verify ownership:
+                </p>
+                <div className="bg-muted rounded p-3 font-mono text-sm mb-4">
+                  <p>Type: CNAME</p>
+                  <p>Name: @</p>
+                  <p>Value: custom.lovable.app</p>
+                  <p>TTL: Automatic</p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button size="sm" variant="outline" onClick={copyDnsRecords}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Records
+                  </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <a 
+                      href="https://docs.lovable.dev/advanced/custom-domains" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View Guide
+                    </a>
+                  </Button>
+                </div>
+              </AlertDescription>
             </Alert>
           )}
-          
-          {currentCustomDomain && (
-            <div className="mt-2 flex items-center justify-between p-2 bg-muted rounded-md">
-              <span className="text-sm">Connected domain:</span>
-              <a
-                href={`https://${currentCustomDomain}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:underline flex items-center"
-              >
-                {currentCustomDomain}
-                <Link className="h-3 w-3 ml-1" />
-              </a>
-            </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button
+            onClick={updateCustomDomain}
+            disabled={isLoading || !customDomain}
+          >
+            Update Domain
+          </Button>
+          {customDomain && !isVerified && (
+            <Button
+              variant="outline"
+              onClick={verifyDomain}
+              disabled={isVerifying || !customDomain}
+            >
+              {isVerifying ? 'Verifying...' : 'Verify Domain'}
+            </Button>
           )}
-          
-          <Alert>
-            <AlertTitle>DNS Configuration</AlertTitle>
-            <AlertDescription>
-              <p className="mb-2">To connect your custom domain, add these DNS records:</p>
-              <code className="block p-2 bg-muted rounded">
-                Type: CNAME<br />
-                Name: www (or @)<br />
-                Value: proxy.lovable.app<br />
-                TTL: Automatic
-              </code>
-            </AlertDescription>
-          </Alert>
-        </div>
-      </CardContent>
-      <CardFooter className="flex flex-col items-start">
-        <p className="text-sm text-muted-foreground">
-          Need help setting up your domain? Check our <a href="/help/domains" className="text-primary hover:underline">domain configuration guide</a>.
-        </p>
-      </CardFooter>
-    </Card>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
